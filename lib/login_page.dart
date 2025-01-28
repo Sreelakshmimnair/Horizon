@@ -37,7 +37,8 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.blue.shade800, // Match SignUp Page background color
+      backgroundColor:
+          Colors.blue.shade800, // Match SignUp Page background color
       body: Center(
         child: SingleChildScrollView(
           child: Padding(
@@ -67,7 +68,9 @@ class _LoginPageState extends State<LoginPage> {
                         borderSide: BorderSide.none,
                       ),
                       contentPadding: const EdgeInsets.symmetric(
-                          vertical: 16.0, horizontal: 20.0),
+                        vertical: 16.0,
+                        horizontal: 20.0,
+                      ),
                     ),
                     keyboardType: TextInputType.emailAddress,
                     style: const TextStyle(color: Colors.white),
@@ -95,7 +98,9 @@ class _LoginPageState extends State<LoginPage> {
                         borderSide: BorderSide.none,
                       ),
                       contentPadding: const EdgeInsets.symmetric(
-                          vertical: 16.0, horizontal: 20.0),
+                        vertical: 16.0,
+                        horizontal: 20.0,
+                      ),
                     ),
                     obscureText: true,
                     style: const TextStyle(color: Colors.white),
