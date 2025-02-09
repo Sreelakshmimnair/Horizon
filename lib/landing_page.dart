@@ -33,20 +33,18 @@ class HomePage extends StatelessWidget {
                 const SizedBox(height: 10),
                 const Text(
                   'Explore Horizon',
-                  style: TextStyle(
-                    fontSize: 18.0,
-                    color: Colors.white,
-                  ),
+                  style: TextStyle(fontSize: 18.0, color: Colors.white),
                 ),
                 const SizedBox(height: 30),
                 // Feature Grid or Card Layout
                 Expanded(
                   child: GridView.builder(
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      mainAxisSpacing: 16.0,
-                      crossAxisSpacing: 16.0,
-                    ),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 16.0,
+                          crossAxisSpacing: 16.0,
+                        ),
                     itemCount: 6, // Number of items
                     itemBuilder: (context, index) {
                       return GestureDetector(
@@ -66,7 +64,8 @@ class HomePage extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(
-                                Icons.featured_play_list, // Replace with your feature icons
+                                Icons
+                                    .featured_play_list, // Replace with your feature icons
                                 color: Colors.blue,
                                 size: 40,
                               ),

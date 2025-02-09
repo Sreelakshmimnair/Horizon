@@ -1,0 +1,1 @@
+ D:\\project\\horizon\\.dart_tool\\flutter_build\\b52aa15e04b35cec53f52362d083a5fe\\native_assets.json: 

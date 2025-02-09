@@ -1,0 +1,28 @@
+^D:\PROJECT\HORIZON\BUILD\WINDOWS\X64\CMAKEFILES\ECE843209B74B153DA0929375B116313\FLUTTER_WINDOWS.DLL.RULE
+setlocal
+"C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E env FLUTTER_ROOT=C:\Users\sayan\OneDrive\Documents\flutter PROJECT_DIR=D:\project\horizon FLUTTER_ROOT=C:\Users\sayan\OneDrive\Documents\flutter FLUTTER_EPHEMERAL_DIR=D:\project\horizon\windows\flutter\ephemeral PROJECT_DIR=D:\project\horizon FLUTTER_TARGET=D:\project\horizon\lib\main.dart DART_OBFUSCATION=false TRACK_WIDGET_CREATION=true TREE_SHAKE_ICONS=false PACKAGE_CONFIG=D:\project\horizon\.dart_tool\package_config.json C:/Users/sayan/OneDrive/Documents/flutter/packages/flutter_tools/bin/tool_backend.bat windows-x64 Debug
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^D:\PROJECT\HORIZON\BUILD\WINDOWS\X64\CMAKEFILES\B8A7B0A3AD1FDE1788C6CD4C25612201\FLUTTER_ASSEMBLE.RULE
+setlocal
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^D:\PROJECT\HORIZON\WINDOWS\FLUTTER\CMAKELISTS.TXT
+setlocal
+"C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SD:/project/horizon/windows -BD:/project/horizon/build/windows/x64 --check-stamp-file D:/project/horizon/build/windows/x64/flutter/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
