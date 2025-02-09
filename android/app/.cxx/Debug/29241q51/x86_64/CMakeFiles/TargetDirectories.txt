@@ -1,0 +1,2 @@
+D:/project/horizon/android/app/.cxx/Debug/29241q51/x86_64/CMakeFiles/edit_cache.dir
+D:/project/horizon/android/app/.cxx/Debug/29241q51/x86_64/CMakeFiles/rebuild_cache.dir
