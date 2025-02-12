@@ -30,6 +30,7 @@ ADDED from D:\project\horizon\android\app\src\main\AndroidManifest.xml:1:1-45:12
 INJECTED from D:\project\horizon\android\app\src\main\AndroidManifest.xml:1:1-45:12
 INJECTED from D:\project\horizon\android\app\src\main\AndroidManifest.xml:1:1-45:12
 INJECTED from D:\project\horizon\android\app\src\main\AndroidManifest.xml:1:1-45:12
+MERGED from [:path_provider_android] D:\project\horizon\build\path_provider_android\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.fragment:fragment:1.7.1] C:\Users\sayan\.gradle\caches\8.10.2\transforms\e75b05c9e322627445c29444a4f14aa2\transformed\fragment-1.7.1\AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.window:window:1.2.0] C:\Users\sayan\.gradle\caches\8.10.2\transforms\0897a816f5326a498f42e644d8238f2c\transformed\jetified-window-1.2.0\AndroidManifest.xml:17:1-31:12
 MERGED from [androidx.window:window-java:1.2.0] C:\Users\sayan\.gradle\caches\8.10.2\transforms\9e073bfab1dce96266c2fc8dea900012\transformed\jetified-window-java-1.2.0\AndroidManifest.xml:17:1-21:12
@@ -47,7 +48,6 @@ MERGED from [androidx.core:core:1.13.1] C:\Users\sayan\.gradle\caches\8.10.2\tra
 MERGED from [androidx.lifecycle:lifecycle-runtime:2.7.0] C:\Users\sayan\.gradle\caches\8.10.2\transforms\e8953023d9a3aad6eebefca2d2523f6b\transformed\lifecycle-runtime-2.7.0\AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.lifecycle:lifecycle-process:2.7.0] C:\Users\sayan\.gradle\caches\8.10.2\transforms\94e93c7bfbd3afd3ffd0e27891859b79\transformed\jetified-lifecycle-process-2.7.0\AndroidManifest.xml:17:1-35:12
 MERGED from [androidx.savedstate:savedstate:1.2.1] C:\Users\sayan\.gradle\caches\8.10.2\transforms\c51d68d6164f8b67c9f88666a983b06c\transformed\jetified-savedstate-1.2.1\AndroidManifest.xml:17:1-22:12
-MERGED from [androidx.annotation:annotation-experimental:1.4.0] C:\Users\sayan\.gradle\caches\8.10.2\transforms\1935f50122237e2a34975f633b3a91ea\transformed\jetified-annotation-experimental-1.4.0\AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\sayan\.gradle\caches\8.10.2\transforms\d2c6870dd4bdb04b4f0cff81490ecaf9\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:17:1-55:12
 MERGED from [androidx.startup:startup-runtime:1.1.1] C:\Users\sayan\.gradle\caches\8.10.2\transforms\b4f377c8939eebf20dfc6b5fa8874d92\transformed\jetified-startup-runtime-1.1.1\AndroidManifest.xml:17:1-33:12
 MERGED from [androidx.tracing:tracing:1.2.0] C:\Users\sayan\.gradle\caches\8.10.2\transforms\390f99896af2bd2ae77cb82afeda656a\transformed\jetified-tracing-1.2.0\AndroidManifest.xml:17:1-22:12
@@ -55,6 +55,7 @@ MERGED from [androidx.arch.core:core-runtime:2.2.0] C:\Users\sayan\.gradle\cache
 MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] C:\Users\sayan\.gradle\caches\8.10.2\transforms\f8ae8fd55a00850696785ae81fb62430\transformed\versionedparcelable-1.1.1\AndroidManifest.xml:17:1-27:12
 MERGED from [androidx.interpolator:interpolator:1.0.0] C:\Users\sayan\.gradle\caches\8.10.2\transforms\b80b97111df2b8f65ca6c54fcb8eda68\transformed\interpolator-1.0.0\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.window.extensions.core:core:1.0.0] C:\Users\sayan\.gradle\caches\8.10.2\transforms\db5cb9128635bf956e02f45b55fa2319\transformed\jetified-core-1.0.0\AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.annotation:annotation-experimental:1.4.0] C:\Users\sayan\.gradle\caches\8.10.2\transforms\1935f50122237e2a34975f633b3a91ea\transformed\jetified-annotation-experimental-1.4.0\AndroidManifest.xml:2:1-7:12
 MERGED from [com.getkeepsafe.relinker:relinker:1.4.5] C:\Users\sayan\.gradle\caches\8.10.2\transforms\31ae11880c015b2c8ae5e14efdafece3\transformed\jetified-relinker-1.4.5\AndroidManifest.xml:2:1-7:12
 	package
 		INJECTED from D:\project\horizon\android\app\src\main\AndroidManifest.xml
@@ -120,6 +121,8 @@ uses-sdk
 INJECTED from D:\project\horizon\android\app\src\main\AndroidManifest.xml reason: use-sdk injection requested
 INJECTED from D:\project\horizon\android\app\src\main\AndroidManifest.xml
 INJECTED from D:\project\horizon\android\app\src\main\AndroidManifest.xml
+MERGED from [:path_provider_android] D:\project\horizon\build\path_provider_android\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:5:5-44
+MERGED from [:path_provider_android] D:\project\horizon\build\path_provider_android\intermediates\merged_manifest\release\processReleaseManifest\AndroidManifest.xml:5:5-44
 MERGED from [androidx.fragment:fragment:1.7.1] C:\Users\sayan\.gradle\caches\8.10.2\transforms\e75b05c9e322627445c29444a4f14aa2\transformed\fragment-1.7.1\AndroidManifest.xml:5:5-44
 MERGED from [androidx.fragment:fragment:1.7.1] C:\Users\sayan\.gradle\caches\8.10.2\transforms\e75b05c9e322627445c29444a4f14aa2\transformed\fragment-1.7.1\AndroidManifest.xml:5:5-44
 MERGED from [androidx.window:window:1.2.0] C:\Users\sayan\.gradle\caches\8.10.2\transforms\0897a816f5326a498f42e644d8238f2c\transformed\jetified-window-1.2.0\AndroidManifest.xml:20:5-44
@@ -154,8 +157,6 @@ MERGED from [androidx.lifecycle:lifecycle-process:2.7.0] C:\Users\sayan\.gradle\
 MERGED from [androidx.lifecycle:lifecycle-process:2.7.0] C:\Users\sayan\.gradle\caches\8.10.2\transforms\94e93c7bfbd3afd3ffd0e27891859b79\transformed\jetified-lifecycle-process-2.7.0\AndroidManifest.xml:21:5-44
 MERGED from [androidx.savedstate:savedstate:1.2.1] C:\Users\sayan\.gradle\caches\8.10.2\transforms\c51d68d6164f8b67c9f88666a983b06c\transformed\jetified-savedstate-1.2.1\AndroidManifest.xml:20:5-44
 MERGED from [androidx.savedstate:savedstate:1.2.1] C:\Users\sayan\.gradle\caches\8.10.2\transforms\c51d68d6164f8b67c9f88666a983b06c\transformed\jetified-savedstate-1.2.1\AndroidManifest.xml:20:5-44
-MERGED from [androidx.annotation:annotation-experimental:1.4.0] C:\Users\sayan\.gradle\caches\8.10.2\transforms\1935f50122237e2a34975f633b3a91ea\transformed\jetified-annotation-experimental-1.4.0\AndroidManifest.xml:5:5-44
-MERGED from [androidx.annotation:annotation-experimental:1.4.0] C:\Users\sayan\.gradle\caches\8.10.2\transforms\1935f50122237e2a34975f633b3a91ea\transformed\jetified-annotation-experimental-1.4.0\AndroidManifest.xml:5:5-44
 MERGED from [androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\sayan\.gradle\caches\8.10.2\transforms\d2c6870dd4bdb04b4f0cff81490ecaf9\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:21:5-44
 MERGED from [androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\sayan\.gradle\caches\8.10.2\transforms\d2c6870dd4bdb04b4f0cff81490ecaf9\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:21:5-44
 MERGED from [androidx.startup:startup-runtime:1.1.1] C:\Users\sayan\.gradle\caches\8.10.2\transforms\b4f377c8939eebf20dfc6b5fa8874d92\transformed\jetified-startup-runtime-1.1.1\AndroidManifest.xml:21:5-23:41
@@ -170,6 +171,8 @@ MERGED from [androidx.interpolator:interpolator:1.0.0] C:\Users\sayan\.gradle\ca
 MERGED from [androidx.interpolator:interpolator:1.0.0] C:\Users\sayan\.gradle\caches\8.10.2\transforms\b80b97111df2b8f65ca6c54fcb8eda68\transformed\interpolator-1.0.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.window.extensions.core:core:1.0.0] C:\Users\sayan\.gradle\caches\8.10.2\transforms\db5cb9128635bf956e02f45b55fa2319\transformed\jetified-core-1.0.0\AndroidManifest.xml:5:5-44
 MERGED from [androidx.window.extensions.core:core:1.0.0] C:\Users\sayan\.gradle\caches\8.10.2\transforms\db5cb9128635bf956e02f45b55fa2319\transformed\jetified-core-1.0.0\AndroidManifest.xml:5:5-44
+MERGED from [androidx.annotation:annotation-experimental:1.4.0] C:\Users\sayan\.gradle\caches\8.10.2\transforms\1935f50122237e2a34975f633b3a91ea\transformed\jetified-annotation-experimental-1.4.0\AndroidManifest.xml:5:5-44
+MERGED from [androidx.annotation:annotation-experimental:1.4.0] C:\Users\sayan\.gradle\caches\8.10.2\transforms\1935f50122237e2a34975f633b3a91ea\transformed\jetified-annotation-experimental-1.4.0\AndroidManifest.xml:5:5-44
 MERGED from [com.getkeepsafe.relinker:relinker:1.4.5] C:\Users\sayan\.gradle\caches\8.10.2\transforms\31ae11880c015b2c8ae5e14efdafece3\transformed\jetified-relinker-1.4.5\AndroidManifest.xml:5:5-43
 MERGED from [com.getkeepsafe.relinker:relinker:1.4.5] C:\Users\sayan\.gradle\caches\8.10.2\transforms\31ae11880c015b2c8ae5e14efdafece3\transformed\jetified-relinker-1.4.5\AndroidManifest.xml:5:5-43
 	android:targetSdkVersion

@@ -1,123 +1,194 @@
 import 'package:flutter/material.dart';
 
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: CollegePredictorPage(),
+    );
+  }
+}
+
+class CollegePredictorPage extends StatefulWidget {
+  @override
+  _CollegePredictorPageState createState() => _CollegePredictorPageState();
+}
+
+class _CollegePredictorPageState extends State<CollegePredictorPage> {
+  String? selectedCountry;
+  final TextEditingController courseController = TextEditingController();
+  final TextEditingController ieltsController = TextEditingController();
+  final TextEditingController percentageController = TextEditingController();
+  final TextEditingController toeflController = TextEditingController();
+  final TextEditingController pteController = TextEditingController();
+
+  final List<Map<String, String>> countries = [
+    {"name": "Germany", "flag": "assets/images/germany.png"},
+    {"name": "Canada", "flag": "assets/images/canada.png"},
+    {"name": "UK", "flag": "assets/images/uk.jpg"},
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
+            colors: [Colors.blue.shade900, Colors.blue.shade600],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFF0072FF), Color(0xFF00C6FF)],
           ),
         ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        child: Center(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 20),
-                // Welcome Message
-                const Text(
-                  'Welcome Back!',
-                  style: TextStyle(
-                    fontSize: 28.0,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                Center(
+                  child: Text(
+                    "College Predictor",
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
-                const SizedBox(height: 10),
-                const Text(
-                  'Explore Horizon',
-                  style: TextStyle(fontSize: 18.0, color: Colors.white),
-                ),
-                const SizedBox(height: 30),
-                // Feature Grid or Card Layout
-                Expanded(
-                  child: GridView.builder(
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          mainAxisSpacing: 16.0,
-                          crossAxisSpacing: 16.0,
-                        ),
-                    itemCount: 6, // Number of items
-                    itemBuilder: (context, index) {
-                      return GestureDetector(
-                        onTap: () {
-                          // Handle card click event here
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Feature $index clicked!')),
-                          );
-                        },
-                        child: Card(
-                          color: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12.0),
-                          ),
-                          elevation: 5,
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons
-                                    .featured_play_list, // Replace with your feature icons
-                                color: Colors.blue,
-                                size: 40,
-                              ),
-                              const SizedBox(height: 10),
-                              Text(
-                                'Feature ${index + 1}',
-                                style: const TextStyle(
-                                  fontSize: 16.0,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.blue,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                const SizedBox(height: 20),
-                // Logout Button
+                SizedBox(height: 20),
+                _buildLabel("Select Country"),
+                _buildDropdown(),
+                _buildTextField("Course", courseController),
+                _buildTextField("IELTS Score", ieltsController, keyboardType: TextInputType.number),
+                _buildTextField("+2 Percentage", percentageController, keyboardType: TextInputType.number),
+                _buildTextField("TOEFL Score (optional)", toeflController, keyboardType: TextInputType.number),
+                _buildTextField("PTE Score (optional)", pteController, keyboardType: TextInputType.number),
+                SizedBox(height: 20),
                 Center(
                   child: ElevatedButton(
-                    onPressed: () {
-                      // Handle Logout
-                      Navigator.pop(context); // Navigate back to login screen
-                    },
+                    onPressed: _showPredictionResult,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
-                      foregroundColor: const Color(0xFF0072FF),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 50,
-                        vertical: 15,
-                      ),
+                      padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12.0),
+                        borderRadius: BorderRadius.circular(30),
                       ),
+                      elevation: 8,
                     ),
-                    child: const Text(
-                      'Logout',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    child: Text(
+                      "Predict",
+                      style: TextStyle(fontSize: 18, color: Colors.blue.shade800, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: 20),
+                Center(
+                  child: Text(
+                    "Prediction Result:",
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
+                ),
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildDropdown() {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 15),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: DropdownButtonFormField<String>(
+        dropdownColor: Colors.white,
+        value: selectedCountry,
+        hint: Text("Choose a country", style: TextStyle(color: Colors.white)),
+        items: countries.map((country) {
+          return DropdownMenuItem<String>(
+            value: country["name"],
+            child: Row(
+              children: [
+                Image.asset(
+                  country["flag"]!,
+                  width: 24,
+                  height: 24,
+                ),
+                SizedBox(width: 10),
+                Text(
+                  country["name"]!,
+                  style: TextStyle(color: Colors.black),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
+        onChanged: (String? newValue) {
+          setState(() {
+            selectedCountry = newValue;
+          });
+        },
+        decoration: InputDecoration(border: InputBorder.none),
+      ),
+    );
+  }
+
+  Widget _buildTextField(String label, TextEditingController controller, {TextInputType keyboardType = TextInputType.text}) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 15),
+      child: AnimatedContainer(
+        duration: Duration(milliseconds: 300),
+        padding: EdgeInsets.symmetric(horizontal: 15),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: TextField(
+          controller: controller,
+          keyboardType: keyboardType,
+          style: TextStyle(color: Colors.white),
+          decoration: InputDecoration(
+            labelText: label,
+            labelStyle: TextStyle(color: Colors.white),
+            border: InputBorder.none,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLabel(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8, top: 10),
+      child: Text(
+        text,
+        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+      ),
+    );
+  }
+
+  void _showPredictionResult() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.blue.shade900,
+        title: Text("Prediction Result", style: TextStyle(color: Colors.white)),
+        content: Text("Your predicted college will be displayed here.", style: TextStyle(color: Colors.white)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("OK", style: TextStyle(color: Colors.white)),
+          ),
+        ],
       ),
     );
   }

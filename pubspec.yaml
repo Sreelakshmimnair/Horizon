@@ -30,6 +30,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_svg: ^2.0.9  # For displaying country flags
+  google_fonts: ^6.1.0  # For stylish fonts
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -63,6 +65,9 @@ flutter:
     - assets/images/logo.png
     - assets/images/gmail.png
     - assets/images/google.png
+    - assets/images/germany.png
+    - assets/images/canada.png
+    - assets/images/uk.jpg
     
 
   # An image asset can refer to one or more resolution-specific "variants", see
