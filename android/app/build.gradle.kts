@@ -3,12 +3,13 @@ plugins {
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+    
 }
 
 android {
     namespace = "com.example.horizon"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    ndkVersion = "27.0.12077973"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
@@ -41,4 +42,9 @@ android {
 
 flutter {
     source = "../.."
+    buildTypes {
+        release {
+            resValue "string", "flutter_tree_shake_icons", "false"
+        }
+    }
 }

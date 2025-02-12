@@ -24,7 +24,7 @@ class _LoginPageState extends State<LoginPage> {
       if (email == validUsername && password == validPassword) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const HomePage()),
+          MaterialPageRoute(builder: (context) => CollegePredictorPage()),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(

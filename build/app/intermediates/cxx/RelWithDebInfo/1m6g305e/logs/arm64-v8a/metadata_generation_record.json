@@ -27,7 +27,20 @@
   },
   {
     "level_": 0,
-    "message_": "- no fingerprint file, will remove stale configuration folder",
+    "message_": "- a hard configure file changed, will remove stale configuration folder",
+    "file_": "C:\\Users\\sayan\\OneDrive\\Documents\\flutter\\packages\\flutter_tools\\gradle\\src\\main\\groovy\\CMakeLists.txt",
+    "tag_": "release|arm64-v8a",
+    "diagnosticCode_": 0,
+    "memoizedIsInitialized": 1,
+    "unknownFields": {
+      "fields": {}
+    },
+    "memoizedSize": -1,
+    "memoizedHashCode": 0
+  },
+  {
+    "level_": 0,
+    "message_": "  - D:\\project\\horizon\\android\\app\\.cxx\\RelWithDebInfo\\1m6g305e\\arm64-v8a\\metadata_generation_command.txt (LAST_MODIFIED_CHANGED)",
     "file_": "C:\\Users\\sayan\\OneDrive\\Documents\\flutter\\packages\\flutter_tools\\gradle\\src\\main\\groovy\\CMakeLists.txt",
     "tag_": "release|arm64-v8a",
     "diagnosticCode_": 0,

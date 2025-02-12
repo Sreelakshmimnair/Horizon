@@ -4,6 +4,13 @@
       jars="D:\project\horizon\build\app\intermediates\flutter\release\libs.jar"
       resolved="__local_aars__:D:\project\horizon\build\app\intermediates\flutter\release\libs.jar:unspecified"/>
   <library
+      name=":@@:path_provider_android::release"
+      project=":path_provider_android"/>
+  <library
+      name="org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.22@jar"
+      jars="C:\Users\sayan\.gradle\caches\modules-2\files-2.1\org.jetbrains.kotlin\kotlin-stdlib-jdk7\1.8.22\4dabb8248310d833bb6a8b516024a91fd3d275c\kotlin-stdlib-jdk7-1.8.22.jar"
+      resolved="org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.22"/>
+  <library
       name="io.flutter:flutter_embedding_release:1.0.0-2d17299f20f3eb164ef21bc80b8079ba293e5985@jar"
       jars="C:\Users\sayan\.gradle\caches\modules-2\files-2.1\io.flutter\flutter_embedding_release\1.0.0-2d17299f20f3eb164ef21bc80b8079ba293e5985\c49a98fee07dd0e2c317ba2d8aaceda18fa99a9d\flutter_embedding_release-1.0.0-2d17299f20f3eb164ef21bc80b8079ba293e5985.jar"
       resolved="io.flutter:flutter_embedding_release:1.0.0-2d17299f20f3eb164ef21bc80b8079ba293e5985"/>
@@ -198,19 +205,6 @@
       jars="C:\Users\sayan\.gradle\caches\modules-2\files-2.1\androidx.lifecycle\lifecycle-common\2.7.0\85334205d65cca70ed0109c3acbd29e22a2d9cb1\lifecycle-common-2.7.0.jar"
       resolved="androidx.lifecycle:lifecycle-common:2.7.0"/>
   <library
-      name="androidx.window:window-java:1.2.0@aar"
-      jars="C:\Users\sayan\.gradle\caches\8.10.2\transforms\9e073bfab1dce96266c2fc8dea900012\transformed\jetified-window-java-1.2.0\jars\classes.jar"
-      resolved="androidx.window:window-java:1.2.0"
-      folder="C:\Users\sayan\.gradle\caches\8.10.2\transforms\9e073bfab1dce96266c2fc8dea900012\transformed\jetified-window-java-1.2.0"
-      manifest="AndroidManifest.xml"
-      resFolder="res"
-      assetsFolder="assets"
-      lintJar="lint.jar"
-      publicResources="public.txt"
-      symbolFile="R.txt"
-      externalAnnotations="annotations.zip"
-      proguardRules="proguard.txt"/>
-  <library
       name="androidx.window:window:1.2.0@aar"
       jars="C:\Users\sayan\.gradle\caches\8.10.2\transforms\0897a816f5326a498f42e644d8238f2c\transformed\jetified-window-1.2.0\jars\classes.jar"
       resolved="androidx.window:window:1.2.0"
@@ -224,33 +218,18 @@
       externalAnnotations="annotations.zip"
       proguardRules="proguard.txt"/>
   <library
-      name="org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.7.1@jar"
-      jars="C:\Users\sayan\.gradle\caches\modules-2\files-2.1\org.jetbrains.kotlinx\kotlinx-coroutines-core-jvm\1.7.1\63a0779cf668e2a47d13fda7c3b0c4f8dc7762f4\kotlinx-coroutines-core-jvm-1.7.1.jar"
-      resolved="org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.7.1"/>
-  <library
-      name="org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.1@jar"
-      jars="C:\Users\sayan\.gradle\caches\modules-2\files-2.1\org.jetbrains.kotlinx\kotlinx-coroutines-android\1.7.1\c2d86b569f10b7fc7e28d3f50c0eed97897d77a7\kotlinx-coroutines-android-1.7.1.jar"
-      resolved="org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.1"/>
-  <library
-      name="org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.22@jar"
-      jars="C:\Users\sayan\.gradle\caches\modules-2\files-2.1\org.jetbrains.kotlin\kotlin-stdlib-jdk8\1.8.22\b25c86d47d6b962b9cf0f8c3f320c8a10eea3dd1\kotlin-stdlib-jdk8-1.8.22.jar"
-      resolved="org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.22"/>
-  <library
-      name="io.flutter:armeabi_v7a_release:1.0.0-2d17299f20f3eb164ef21bc80b8079ba293e5985@jar"
-      jars="C:\Users\sayan\.gradle\caches\modules-2\files-2.1\io.flutter\armeabi_v7a_release\1.0.0-2d17299f20f3eb164ef21bc80b8079ba293e5985\5f90bbe841203f2adc742ba95071beefa2a1592\armeabi_v7a_release-1.0.0-2d17299f20f3eb164ef21bc80b8079ba293e5985.jar"
-      resolved="io.flutter:armeabi_v7a_release:1.0.0-2d17299f20f3eb164ef21bc80b8079ba293e5985"/>
-  <library
-      name="io.flutter:arm64_v8a_release:1.0.0-2d17299f20f3eb164ef21bc80b8079ba293e5985@jar"
-      jars="C:\Users\sayan\.gradle\caches\modules-2\files-2.1\io.flutter\arm64_v8a_release\1.0.0-2d17299f20f3eb164ef21bc80b8079ba293e5985\84eedcc5ecc33f53c8d0c58e7d97f7a64b4ca2a4\arm64_v8a_release-1.0.0-2d17299f20f3eb164ef21bc80b8079ba293e5985.jar"
-      resolved="io.flutter:arm64_v8a_release:1.0.0-2d17299f20f3eb164ef21bc80b8079ba293e5985"/>
-  <library
-      name="io.flutter:x86_64_release:1.0.0-2d17299f20f3eb164ef21bc80b8079ba293e5985@jar"
-      jars="C:\Users\sayan\.gradle\caches\modules-2\files-2.1\io.flutter\x86_64_release\1.0.0-2d17299f20f3eb164ef21bc80b8079ba293e5985\77fc2aaf8bab7f364fecf2c888121386f606fab9\x86_64_release-1.0.0-2d17299f20f3eb164ef21bc80b8079ba293e5985.jar"
-      resolved="io.flutter:x86_64_release:1.0.0-2d17299f20f3eb164ef21bc80b8079ba293e5985"/>
-  <library
-      name="org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.22@jar"
-      jars="C:\Users\sayan\.gradle\caches\modules-2\files-2.1\org.jetbrains.kotlin\kotlin-stdlib-jdk7\1.8.22\4dabb8248310d833bb6a8b516024a91fd3d275c\kotlin-stdlib-jdk7-1.8.22.jar"
-      resolved="org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.22"/>
+      name="androidx.window:window-java:1.2.0@aar"
+      jars="C:\Users\sayan\.gradle\caches\8.10.2\transforms\9e073bfab1dce96266c2fc8dea900012\transformed\jetified-window-java-1.2.0\jars\classes.jar"
+      resolved="androidx.window:window-java:1.2.0"
+      folder="C:\Users\sayan\.gradle\caches\8.10.2\transforms\9e073bfab1dce96266c2fc8dea900012\transformed\jetified-window-java-1.2.0"
+      manifest="AndroidManifest.xml"
+      resFolder="res"
+      assetsFolder="assets"
+      lintJar="lint.jar"
+      publicResources="public.txt"
+      symbolFile="R.txt"
+      externalAnnotations="annotations.zip"
+      proguardRules="proguard.txt"/>
   <library
       name="androidx.annotation:annotation-experimental:1.4.0@aar"
       jars="C:\Users\sayan\.gradle\caches\8.10.2\transforms\1935f50122237e2a34975f633b3a91ea\transformed\jetified-annotation-experimental-1.4.0\jars\classes.jar"
@@ -312,17 +291,37 @@
       jars="C:\Users\sayan\.gradle\caches\modules-2\files-2.1\androidx.collection\collection\1.1.0\1f27220b47669781457de0d600849a5de0e89909\collection-1.1.0.jar"
       resolved="androidx.collection:collection:1.1.0"/>
   <library
-      name="androidx.annotation:annotation-jvm:1.8.0@jar"
-      jars="C:\Users\sayan\.gradle\caches\modules-2\files-2.1\androidx.annotation\annotation-jvm\1.8.0\b8a16fe526014b7941c1debaccaf9c5153692dbb\annotation-jvm-1.8.0.jar"
-      resolved="androidx.annotation:annotation-jvm:1.8.0"/>
+      name="androidx.annotation:annotation-jvm:1.9.1@jar"
+      jars="C:\Users\sayan\.gradle\caches\modules-2\files-2.1\androidx.annotation\annotation-jvm\1.9.1\b17951747e38bf3986a24431b9ba0d039958aa5f\annotation-jvm-1.9.1.jar"
+      resolved="androidx.annotation:annotation-jvm:1.9.1"/>
   <library
-      name="org.jetbrains.kotlin:kotlin-stdlib:1.8.22@jar"
-      jars="C:\Users\sayan\.gradle\caches\modules-2\files-2.1\org.jetbrains.kotlin\kotlin-stdlib\1.8.22\636bf8b320e7627482771bbac9ed7246773c02bd\kotlin-stdlib-1.8.22.jar"
-      resolved="org.jetbrains.kotlin:kotlin-stdlib:1.8.22"/>
+      name="org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.1@jar"
+      jars="C:\Users\sayan\.gradle\caches\modules-2\files-2.1\org.jetbrains.kotlinx\kotlinx-coroutines-android\1.7.1\c2d86b569f10b7fc7e28d3f50c0eed97897d77a7\kotlinx-coroutines-android-1.7.1.jar"
+      resolved="org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.1"/>
   <library
-      name="org.jetbrains.kotlin:kotlin-stdlib-common:1.8.22@jar"
-      jars="C:\Users\sayan\.gradle\caches\modules-2\files-2.1\org.jetbrains.kotlin\kotlin-stdlib-common\1.8.22\1a8e3601703ae14bb58757ea6b2d8e8e5935a586\kotlin-stdlib-common-1.8.22.jar"
-      resolved="org.jetbrains.kotlin:kotlin-stdlib-common:1.8.22"/>
+      name="org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.7.1@jar"
+      jars="C:\Users\sayan\.gradle\caches\modules-2\files-2.1\org.jetbrains.kotlinx\kotlinx-coroutines-core-jvm\1.7.1\63a0779cf668e2a47d13fda7c3b0c4f8dc7762f4\kotlinx-coroutines-core-jvm-1.7.1.jar"
+      resolved="org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.7.1"/>
+  <library
+      name="org.jetbrains.kotlin:kotlin-stdlib:1.9.24@jar"
+      jars="C:\Users\sayan\.gradle\caches\modules-2\files-2.1\org.jetbrains.kotlin\kotlin-stdlib\1.9.24\9928532f12c66ad816a625b3f9984f8368ca6d2b\kotlin-stdlib-1.9.24.jar"
+      resolved="org.jetbrains.kotlin:kotlin-stdlib:1.9.24"/>
+  <library
+      name="org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.22@jar"
+      jars="C:\Users\sayan\.gradle\caches\modules-2\files-2.1\org.jetbrains.kotlin\kotlin-stdlib-jdk8\1.8.22\b25c86d47d6b962b9cf0f8c3f320c8a10eea3dd1\kotlin-stdlib-jdk8-1.8.22.jar"
+      resolved="org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.22"/>
+  <library
+      name="io.flutter:armeabi_v7a_release:1.0.0-2d17299f20f3eb164ef21bc80b8079ba293e5985@jar"
+      jars="C:\Users\sayan\.gradle\caches\modules-2\files-2.1\io.flutter\armeabi_v7a_release\1.0.0-2d17299f20f3eb164ef21bc80b8079ba293e5985\5f90bbe841203f2adc742ba95071beefa2a1592\armeabi_v7a_release-1.0.0-2d17299f20f3eb164ef21bc80b8079ba293e5985.jar"
+      resolved="io.flutter:armeabi_v7a_release:1.0.0-2d17299f20f3eb164ef21bc80b8079ba293e5985"/>
+  <library
+      name="io.flutter:arm64_v8a_release:1.0.0-2d17299f20f3eb164ef21bc80b8079ba293e5985@jar"
+      jars="C:\Users\sayan\.gradle\caches\modules-2\files-2.1\io.flutter\arm64_v8a_release\1.0.0-2d17299f20f3eb164ef21bc80b8079ba293e5985\84eedcc5ecc33f53c8d0c58e7d97f7a64b4ca2a4\arm64_v8a_release-1.0.0-2d17299f20f3eb164ef21bc80b8079ba293e5985.jar"
+      resolved="io.flutter:arm64_v8a_release:1.0.0-2d17299f20f3eb164ef21bc80b8079ba293e5985"/>
+  <library
+      name="io.flutter:x86_64_release:1.0.0-2d17299f20f3eb164ef21bc80b8079ba293e5985@jar"
+      jars="C:\Users\sayan\.gradle\caches\modules-2\files-2.1\io.flutter\x86_64_release\1.0.0-2d17299f20f3eb164ef21bc80b8079ba293e5985\77fc2aaf8bab7f364fecf2c888121386f606fab9\x86_64_release-1.0.0-2d17299f20f3eb164ef21bc80b8079ba293e5985.jar"
+      resolved="io.flutter:x86_64_release:1.0.0-2d17299f20f3eb164ef21bc80b8079ba293e5985"/>
   <library
       name="org.jetbrains:annotations:23.0.0@jar"
       jars="C:\Users\sayan\.gradle\caches\modules-2\files-2.1\org.jetbrains\annotations\23.0.0\8cc20c07506ec18e0834947b84a864bfc094484e\annotations-23.0.0.jar"
