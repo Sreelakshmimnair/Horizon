@@ -25,3 +25,4 @@ com.example.horizon.app-resValues-23 D:\project\horizon\build\app\generated\res\
 com.example.horizon.app-packageDebugResources-24 D:\project\horizon\build\app\intermediates\incremental\debug\packageDebugResources\merged.dir
 com.example.horizon.app-packageDebugResources-25 D:\project\horizon\build\app\intermediates\incremental\debug\packageDebugResources\stripped.dir
 com.example.horizon.app-debug-26 D:\project\horizon\build\app\intermediates\merged_res\debug\mergeDebugResources
+com.example.horizon.app-debug-27 D:\project\horizon\build\path_provider_android\intermediates\packaged_res\debug\packageDebugResources

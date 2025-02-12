@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'signup_page.dart'; // Import the SignUpPage
-import 'landing_page.dart'; // Import HomeScreen for successful login
+import 'homepage.dart'; // Import the HomePage after login
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -24,7 +24,7 @@ class _LoginPageState extends State<LoginPage> {
       if (email == validUsername && password == validPassword) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => CollegePredictorPage()),
+          MaterialPageRoute(builder: (context) => HomePage()), // Go to HomePage after successful login
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
