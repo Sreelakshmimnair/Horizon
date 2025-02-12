@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'homepage.dart'; // Import the HomePage
 
 void main() {
   runApp(MyApp());
@@ -22,6 +22,11 @@ class CollegePredictorPage extends StatefulWidget {
 
 class _CollegePredictorPageState extends State<CollegePredictorPage> {
   String? selectedCountry;
+  String higherStudies = "Yes";
+  String internshipAvailable = "Yes";
+  String partTimeJob = "Yes";
+  String stayBack = "Yes";
+
   final TextEditingController courseController = TextEditingController();
   final TextEditingController ieltsController = TextEditingController();
   final TextEditingController percentageController = TextEditingController();
@@ -37,6 +42,16 @@ class _CollegePredictorPageState extends State<CollegePredictorPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Text("College Predictor"),
+        backgroundColor: Colors.blue.shade800,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(context); // Go back to the previous page (HomePage)
+          },
+        ),
+      ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -65,10 +80,33 @@ class _CollegePredictorPageState extends State<CollegePredictorPage> {
                 _buildLabel("Select Country"),
                 _buildDropdown(),
                 _buildTextField("Course", courseController),
-                _buildTextField("IELTS Score", ieltsController, keyboardType: TextInputType.number),
                 _buildTextField("+2 Percentage", percentageController, keyboardType: TextInputType.number),
-                _buildTextField("TOEFL Score (optional)", toeflController, keyboardType: TextInputType.number),
-                _buildTextField("PTE Score (optional)", pteController, keyboardType: TextInputType.number),
+
+                // IELTS, TOEFL, PTE in a single row
+                _buildLabel("Language Scores"),
+                Row(
+                  children: [
+                    Expanded(child: _buildSmallTextField("IELTS", ieltsController)),
+                    SizedBox(width: 8),
+                    Expanded(child: _buildSmallTextField("TOEFL", toeflController)),
+                    SizedBox(width: 8),
+                    Expanded(child: _buildSmallTextField("PTE", pteController)),
+                  ],
+                ),
+
+                SizedBox(height: 20),
+                _buildLabel("Higher Studies Possible?"),
+                _buildYesNoDropdown((val) => setState(() => higherStudies = val ?? "Yes"), higherStudies),
+
+                _buildLabel("Internship Available?"),
+                _buildYesNoDropdown((val) => setState(() => internshipAvailable = val ?? "Yes"), internshipAvailable),
+
+                _buildLabel("Part-time Job?"),
+                _buildYesNoDropdown((val) => setState(() => partTimeJob = val ?? "Yes"), partTimeJob),
+
+                _buildLabel("Stay Back?"),
+                _buildYesNoDropdown((val) => setState(() => stayBack = val ?? "Yes"), stayBack),
+
                 SizedBox(height: 20),
                 Center(
                   child: ElevatedButton(
@@ -114,7 +152,7 @@ class _CollegePredictorPageState extends State<CollegePredictorPage> {
         value: selectedCountry,
         hint: Text("Choose a country", style: TextStyle(color: Colors.white)),
         items: countries.map((country) {
-          return DropdownMenuItem<String>(
+          return DropdownMenuItem<String>( 
             value: country["name"],
             child: Row(
               children: [
@@ -166,12 +204,54 @@ class _CollegePredictorPageState extends State<CollegePredictorPage> {
     );
   }
 
+  Widget _buildSmallTextField(String label, TextEditingController controller) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 10),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: TextField(
+        controller: controller,
+        keyboardType: TextInputType.number,
+        style: TextStyle(color: Colors.white),
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: TextStyle(color: Colors.white),
+          border: InputBorder.none,
+        ),
+      ),
+    );
+  }
+
   Widget _buildLabel(String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8, top: 10),
       child: Text(
         text,
         style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+      ),
+    );
+  }
+
+  Widget _buildYesNoDropdown(ValueChanged<String?>? onChanged, String value) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 15),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: DropdownButton<String?>(
+        value: value,
+        dropdownColor: Colors.white,
+        onChanged: onChanged,
+        items: ["Yes", "No"].map((option) {
+          return DropdownMenuItem<String?>(
+            value: option,
+            child: Text(option, style: TextStyle(color: Colors.black)),
+          );
+        }).toList(),
+        underline: SizedBox(),
       ),
     );
   }
@@ -184,10 +264,7 @@ class _CollegePredictorPageState extends State<CollegePredictorPage> {
         title: Text("Prediction Result", style: TextStyle(color: Colors.white)),
         content: Text("Your predicted college will be displayed here.", style: TextStyle(color: Colors.white)),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text("OK", style: TextStyle(color: Colors.white)),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text("OK", style: TextStyle(color: Colors.white))),
         ],
       ),
     );
