@@ -4,7 +4,7 @@
             "outputFile": "com.example.horizon.app-mergeDebugResources-24:/values-night-v8/values-night-v8.xml",
             "map": [
                 {
-                    "source": "D:\\project\\horizon\\android\\app\\src\\main\\res\\values-night\\styles.xml",
+                    "source": "D:\\PROJECT\\Horizon\\android\\app\\src\\main\\res\\values-night\\styles.xml",
                     "from": {
                         "startLines": "3,14",
                         "startColumns": "4,4",
