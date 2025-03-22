@@ -1,8 +1,25 @@
 {
     "logs": [
         {
-            "outputFile": "com.example.horizon.app-mergeDebugResources-24:/values-az/values-az.xml",
+            "outputFile": "com.example.horizon.app-mergeDebugResources-26:/values-az/values-az.xml",
             "map": [
+                {
+                    "source": "C:\\Users\\nisha\\.gradle\\caches\\8.10.2\\transforms\\abeed4f47a72eff8f5b4e9bf7f2f3c91\\transformed\\jetified-play-services-basement-18.3.0\\res\\values-az\\values.xml",
+                    "from": {
+                        "startLines": "4",
+                        "startColumns": "0",
+                        "startOffsets": "195",
+                        "endColumns": "157",
+                        "endOffsets": "352"
+                    },
+                    "to": {
+                        "startLines": "9",
+                        "startColumns": "4",
+                        "startOffsets": "782",
+                        "endColumns": "161",
+                        "endOffsets": "939"
+                    }
+                },
                 {
                     "source": "C:\\Users\\nisha\\.gradle\\caches\\8.10.2\\transforms\\8cf478dec41eed746328fa8046755ba2\\transformed\\core-1.13.1\\res\\values-az\\values-az.xml",
                     "from": {
@@ -11,6 +28,13 @@
                         "startOffsets": "55,156,258,361,465,566,671,782",
                         "endColumns": "100,101,102,103,100,104,110,100",
                         "endOffsets": "151,253,356,460,561,666,777,878"
+                    },
+                    "to": {
+                        "startLines": "2,3,4,5,6,7,8,10",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,156,258,361,465,566,671,944",
+                        "endColumns": "100,101,102,103,100,104,110,100",
+                        "endOffsets": "151,253,356,460,561,666,777,1040"
                     }
                 }
             ]

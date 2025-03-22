@@ -45,7 +45,7 @@ Future<void> predictCollege() async {
      setState(() {
       isLoading = true;  
     }); 
-    final url = Uri.parse("http://192.168.43.253:5000/predict"); 
+    final url = Uri.parse("https://flask-8v3h.onrender.com/predict"); 
     final response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
