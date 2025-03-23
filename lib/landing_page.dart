@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'homepage.dart'; // Import the HomePage
+import 'prediction_result_page.dart'; // Import the new PredictionResultPage
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -169,12 +170,6 @@ Future<void> predictCollege() async {
   ),
 ),
                 SizedBox(height: 20),
-                Center(
-                  child: Text(
-                    "Prediction Result:",
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
-                  ),
-                ),
               ],
             ),
           ),
@@ -300,23 +295,26 @@ Future<void> predictCollege() async {
   }
 
   void _showPredictionResult() {
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      backgroundColor: Colors.blue.shade900,
-      title: Text("Prediction Result", style: TextStyle(color: Colors.white,fontWeight:FontWeight.bold)),
-      content: Text(
-        predictionResult.isNotEmpty ? predictionResult : "No prediction available.",
-        style: TextStyle(color: Colors.white,fontWeight:FontWeight.bold),
+    // Collect all the input data
+    Map<String, dynamic> predictionData = {
+      'country': selectedCountry,
+      'course': courseController.text,
+      'percentage': percentageController.text,
+      'ielts': ieltsController.text,
+      'toefl': toeflController.text,
+      'pte': pteController.text,
+      'higherStudies': higherStudies,
+      'internshipAvailable': internshipAvailable,
+      'partTimeJob': partTimeJob,
+      'stayBack': stayBack,
+    };
+    
+    // Navigate to the prediction result page with the collected data
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PredictionResultPage(predictionData: predictionData),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text("OK", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        ),
-      ],
-    ),
-  );
-}
-
+    );
+  }
 }
