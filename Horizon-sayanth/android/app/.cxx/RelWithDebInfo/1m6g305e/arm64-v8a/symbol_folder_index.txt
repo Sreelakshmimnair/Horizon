@@ -1,1 +1,0 @@
-D:\project\horizon\build\app\intermediates\cxx\RelWithDebInfo\1m6g305e\obj\arm64-v8a

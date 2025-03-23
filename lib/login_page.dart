@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'signup_page.dart'; // Import the SignUpPage
-import 'homepage.dart'; // Import the HomePage after login
+import 'package:firebase_auth/firebase_auth.dart';
+import 'signup_page.dart';
+import 'homepage.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -11,33 +12,116 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
-  String email = '';
-  String password = '';
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  bool _isLoading = false;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  // Hardcoded credentials for demonstration
-  final String validUsername = 'horizon';
-  final String validPassword = '1234';
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
-  // Simulate a login process
-  void _login() {
+  // Login with Firebase Authentication
+  Future<void> _login() async {
     if (_formKey.currentState!.validate()) {
-      if (email == validUsername && password == validPassword) {
+      setState(() {
+        _isLoading = true;
+      });
+
+      try {
+        // Sign in with email and password
+        await _auth.signInWithEmailAndPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+        );
+
+        // If successful, navigate to home page
+        if (!mounted) return;
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => HomePage()), // Go to HomePage after successful login
+          MaterialPageRoute(builder: (context) => HomePage()),
         );
-      } else {
+      } on FirebaseAuthException catch (e) {
+        String errorMessage = 'An error occurred. Please try again.';
+        
+        if (e.code == 'user-not-found') {
+          errorMessage = 'No user found with this email.';
+        } else if (e.code == 'wrong-password') {
+          errorMessage = 'Incorrect password.';
+        } else if (e.code == 'invalid-email') {
+          errorMessage = 'Invalid email format.';
+        } else if (e.code == 'user-disabled') {
+          errorMessage = 'This account has been disabled.';
+        } else if (e.code == 'too-many-requests') {
+          errorMessage = 'Too many login attempts. Try again later.';
+        }
+
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Invalid email or password')),
+          SnackBar(content: Text(errorMessage)),
         );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Login failed: ${e.toString()}')),
+        );
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
       }
+    }
+  }
+
+  // Google Sign In method (placeholder - implement fully later)
+  Future<void> _signInWithGoogle() async {
+    // Implementation would go here
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Google Sign-In not implemented yet')),
+    );
+  }
+
+  // Reset password method
+  Future<void> _resetPassword() async {
+    String email = _emailController.text.trim();
+    
+    if (email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter your email address first')),
+      );
+      return;
+    }
+
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Password reset email sent. Check your inbox.')),
+      );
+    } on FirebaseAuthException catch (e) {
+      String errorMessage = 'Failed to send reset email.';
+      if (e.code == 'user-not-found') {
+        errorMessage = 'No user found with this email.';
+      } else if (e.code == 'invalid-email') {
+        errorMessage = 'Invalid email format.';
+      }
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage)),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${e.toString()}')),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.blue.shade800, // Match SignUp Page background color
+      backgroundColor: Colors.blue.shade800,
       body: Center(
         child: SingleChildScrollView(
           child: Padding(
@@ -56,7 +140,9 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                   const SizedBox(height: 40),
+                  // Email field
                   TextFormField(
+                    controller: _emailController,
                     decoration: InputDecoration(
                       labelText: 'Email',
                       labelStyle: const TextStyle(color: Colors.white),
@@ -75,16 +161,17 @@ class _LoginPageState extends State<LoginPage> {
                       if (value == null || value.isEmpty) {
                         return 'Please enter your email';
                       }
+                      // Basic email validation
+                      if (!value.contains('@') || !value.contains('.')) {
+                        return 'Please enter a valid email address';
+                      }
                       return null;
-                    },
-                    onChanged: (value) {
-                      setState(() {
-                        email = value;
-                      });
                     },
                   ),
                   const SizedBox(height: 20),
+                  // Password field
                   TextFormField(
+                    controller: _passwordController,
                     decoration: InputDecoration(
                       labelText: 'Password',
                       labelStyle: const TextStyle(color: Colors.white),
@@ -105,15 +192,26 @@ class _LoginPageState extends State<LoginPage> {
                       }
                       return null;
                     },
-                    onChanged: (value) {
-                      setState(() {
-                        password = value;
-                      });
-                    },
                   ),
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 10),
+                  // Forgot password
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: _resetPassword,
+                      child: const Text(
+                        'Forgot Password?',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  // Login button
                   ElevatedButton(
-                    onPressed: _login,
+                    onPressed: _isLoading ? null : _login,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue.shade900,
                       foregroundColor: Colors.white,
@@ -125,18 +223,53 @@ class _LoginPageState extends State<LoginPage> {
                         borderRadius: BorderRadius.circular(30.0),
                       ),
                     ),
-                    child: const Text(
-                      'Login',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    child: _isLoading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Text(
+                            'Login',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                  ),
+                  const SizedBox(height: 20),
+                  // Or continue with section
+                  const Text(
+                    'or continue with',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16.0,
                     ),
                   ),
                   const SizedBox(height: 20),
+                  // Social login button (Google)
+                  GestureDetector(
+                    onTap: _signInWithGoogle,
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(50),
+                      ),
+                      child: Image.asset(
+                        'assets/images/google.png',
+                        height: 30,
+                        width: 30,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+                  // Sign up option
                   GestureDetector(
                     onTap: () {
-                      // Navigate to SignUpPage
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -149,7 +282,7 @@ class _LoginPageState extends State<LoginPage> {
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 16,
-                      ), // Removed underline
+                      ),
                     ),
                   ),
                 ],

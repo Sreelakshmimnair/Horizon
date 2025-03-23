@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "652597263517",
-    "project_id": "horizonog-a6d9f",
-    "storage_bucket": "horizonog-a6d9f.firebasestorage.app"
+    "project_number": "353924248823",
+    "project_id": "horizon-test-d997a",
+    "storage_bucket": "horizon-test-d997a.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:652597263517:android:d070a90136650a4db56874",
+        "mobilesdk_app_id": "1:353924248823:android:afdd19ee59618f7a7dcff2",
         "android_client_info": {
           "package_name": "com.example.horizon"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyChup56kxe4tRXq2L6f3UesGaz01kVK7Rc"
+          "current_key": "AIzaSyB-HfpQg_Fkf149sn86kEayK89Gm_LItnc"
         }
       ],
       "services": {
