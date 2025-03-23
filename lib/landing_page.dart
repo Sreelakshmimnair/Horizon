@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'homepage.dart'; // Import the HomePage
 import 'prediction_result_page.dart'; // Import the new PredictionResultPage
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 void main() {
   runApp(MyApp());
@@ -27,7 +29,8 @@ class _CollegePredictorPageState extends State<CollegePredictorPage> {
   String internshipAvailable = "Yes";
   String partTimeJob = "Yes";
   String stayBack = "Yes";
-
+  String predictionResult = "";
+  bool isLoading = false;
   final TextEditingController courseController = TextEditingController();
   final TextEditingController ieltsController = TextEditingController();
   final TextEditingController percentageController = TextEditingController();
@@ -39,7 +42,44 @@ class _CollegePredictorPageState extends State<CollegePredictorPage> {
     {"name": "Canada", "flag": "assets/images/canada.png"},
     {"name": "UK", "flag": "assets/images/uk.jpg"},
   ];
+Future<void> predictCollege() async {
+     setState(() {
+      isLoading = true;  
+    }); 
+    final url = Uri.parse("https://flask-8v3h.onrender.com/predict"); 
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "Country": selectedCountry,
+        "Course": courseController.text,
+        "IELTS": double.tryParse(ieltsController.text) ?? 0.0,
+        "Plustwo": double.tryParse(percentageController.text) ?? 0.0,
+        "TOEFL": double.tryParse(toeflController.text) ?? 0.0,
+        "PTE": double.tryParse(pteController.text) ?? 0.0,
+        "Internship": internshipAvailable, 
+        "Partime": partTimeJob,
+        "Stayback": stayBack,
+        "HigherStudies": higherStudies,
+      }),
+    );
 
+    if (response.statusCode == 200) {
+      final result = jsonDecode(response.body);
+      setState(() {
+        predictionResult = result["college"];
+      });
+    } else {
+      setState(() {
+        predictionResult = "Error: Unable to predict.";
+      });
+    }
+
+    setState(() {
+      isLoading = false;  
+    });
+  }
+    
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -49,7 +89,7 @@ class _CollegePredictorPageState extends State<CollegePredictorPage> {
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () {
-            Navigator.pop(context); // Go back to the previous page (HomePage)
+            Navigator.pop(context); 
           },
         ),
       ),
@@ -110,22 +150,25 @@ class _CollegePredictorPageState extends State<CollegePredictorPage> {
 
                 SizedBox(height: 20),
                 Center(
-                  child: ElevatedButton(
-                    onPressed: _showPredictionResult,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      elevation: 8,
-                    ),
-                    child: Text(
-                      "Predict",
-                      style: TextStyle(fontSize: 18, color: Colors.blue.shade800, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ),
+  child: ElevatedButton(
+    onPressed: () async {
+      await predictCollege();  // Call the prediction API first
+      _showPredictionResult(); // Then show the result
+    },
+    style: ElevatedButton.styleFrom(
+      backgroundColor: Colors.white,
+      padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(30),
+      ),
+      elevation: 8,
+    ),
+    child: Text(
+      isLoading ? "Loading..." : "Predict",
+      style: TextStyle(fontSize: 18, color: Colors.blue.shade800, fontWeight: FontWeight.bold),
+    ),
+  ),
+),
                 SizedBox(height: 20),
               ],
             ),
