@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'homepage.dart'; // Import the HomePage
+import 'prediction_result_page.dart'; // Import the new PredictionResultPage
 
 void main() {
   runApp(MyApp());
@@ -126,12 +127,6 @@ class _CollegePredictorPageState extends State<CollegePredictorPage> {
                   ),
                 ),
                 SizedBox(height: 20),
-                Center(
-                  child: Text(
-                    "Prediction Result:",
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
-                  ),
-                ),
               ],
             ),
           ),
@@ -257,15 +252,25 @@ class _CollegePredictorPageState extends State<CollegePredictorPage> {
   }
 
   void _showPredictionResult() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.blue.shade900,
-        title: Text("Prediction Result", style: TextStyle(color: Colors.white)),
-        content: Text("Your predicted college will be displayed here.", style: TextStyle(color: Colors.white)),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text("OK", style: TextStyle(color: Colors.white))),
-        ],
+    // Collect all the input data
+    Map<String, dynamic> predictionData = {
+      'country': selectedCountry,
+      'course': courseController.text,
+      'percentage': percentageController.text,
+      'ielts': ieltsController.text,
+      'toefl': toeflController.text,
+      'pte': pteController.text,
+      'higherStudies': higherStudies,
+      'internshipAvailable': internshipAvailable,
+      'partTimeJob': partTimeJob,
+      'stayBack': stayBack,
+    };
+    
+    // Navigate to the prediction result page with the collected data
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PredictionResultPage(predictionData: predictionData),
       ),
     );
   }
