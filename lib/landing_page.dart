@@ -201,31 +201,59 @@ class _CollegePredictorPageState extends State<CollegePredictorPage> {
     {"name": "UK", "flag": "assets/images/uk.jpg"},
   ];
 
-  Future<void> predictCollege() async {
-    setState(() {
-      isLoading = true;
-    });
-    
-    try {
-      // Using a placeholder for API logic
-      // This would normally call the API, but we'll simulate it for now
-      await Future.delayed(Duration(seconds: 1)); // Simulate network delay
-      
-      // Set a sample prediction result
+Future<void> predictCollege() async {
+  setState(() {
+    isLoading = true;
+  });
+
+  try {
+    final url = Uri.parse("https://flask-8v3h.onrender.com/predict");
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "Country": selectedCountry,
+        "Course": selectedCourse,
+        "IELTS": ieltsScore,
+        "Plustwo": double.tryParse(percentageController.text.trim()) ?? 0.0,
+        "TOEFL": toeflScore,
+        "PTE": pteScore,
+        "Internship": internshipAvailable,
+        "Partime": partTimeJob,
+        "Stayback": stayBack,
+        "HigherStudies": higherStudies,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final result = jsonDecode(response.body);
+
+      if (mounted) {
+        setState(() {
+          predictionResult = result["college"] ?? "No prediction found.";
+          isLoading = false;
+        });
+
+        // Navigate to the next page with data
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => PredictionResultPage(predictionData: result),
+          ),
+        );
+      }
+    } else {
+      throw Exception("Server error: ${response.statusCode}");
+    }
+  } catch (e) {
+    if (mounted) {
       setState(() {
-        predictionResult = "University of Sample";
-        isLoading = false;
-      });
-      
-      return;
-    } catch (e) {
-      setState(() {
-        predictionResult = "Error: Unable to predict.";
+        predictionResult = "Error: ${e.toString()}";
         isLoading = false;
       });
     }
   }
-
+}
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -305,7 +333,7 @@ class _CollegePredictorPageState extends State<CollegePredictorPage> {
                 _buildLabel("PTE Score: ${pteScore.toStringAsFixed(0)}"),
                 _buildSlider(
                   value: pteScore,
-                  min: 10.0,
+                  min: 0.0,
                   max: 90.0,
                   divisions: 80,
                   onChanged: (value) {
@@ -574,20 +602,24 @@ class _CollegePredictorPageState extends State<CollegePredictorPage> {
     );
   }
 
-  void _navigateToPredictionResult() {
-    // Collect all the input data
+ void _navigateToPredictionResult() async {
+  setState(() {
+    isLoading = true;
+  });
+
+  try {
+    // Format the data according to what your API expects
     Map<String, dynamic> predictionData = {
-      'country': selectedCountry,
-      'stream': selectedStream,
-      'course': selectedCourse,
-      'percentage': percentageController.text,
-      'ielts': ieltsScore.toString(),
-      'toefl': toeflScore.toString(),
-      'pte': pteScore.toString(),
-      'higherStudies': higherStudies,
-      'internshipAvailable': internshipAvailable,
-      'partTimeJob': partTimeJob,
-      'stayBack': stayBack,
+      "Country": selectedCountry,
+      "Course": selectedCourse,
+      "IELTS": ieltsScore,
+      "Plustwo": double.tryParse(percentageController.text.trim()) ?? 0.0,
+      "TOEFL": toeflScore,
+      "PTE": pteScore,
+      "Internship": internshipAvailable,
+      "Partime": partTimeJob,
+      "Stayback": stayBack,
+      "HigherStudies": higherStudies,
     };
     
     // Reset loading state
@@ -595,12 +627,23 @@ class _CollegePredictorPageState extends State<CollegePredictorPage> {
       isLoading = false;
     });
     
-    // Navigate to the prediction result page with the collected data
+    // Navigate to the prediction result page with the properly formatted data
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => PredictionResultPage(predictionData: predictionData),
       ),
     );
+  } catch (e) {
+    setState(() {
+      isLoading = false;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Error preparing prediction data: ${e.toString()}"),
+        backgroundColor: Colors.red,
+      )
+    );
   }
+}
 }
