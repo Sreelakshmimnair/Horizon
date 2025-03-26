@@ -240,7 +240,7 @@ class _CollegePredictorPageState extends State<CollegePredictorPage> {
     return 0.0; // Default to 0.0 if parsing fails
   }
 }
-
+// 
 Future<void> predictCollege() async {
   setState(() {
     isLoading = true;
