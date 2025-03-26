@@ -26,7 +26,7 @@ class _PredictionResultPageState extends State<PredictionResultPage> {
 
   Future<void> _fetchPredictions() async {
     try {
-      print("Sending request to API...");
+      print("🚀 Sending request to API...");
       print("Request Data: ${jsonEncode(widget.predictionData)}");
 
       final response = await http.post(
@@ -35,29 +35,30 @@ class _PredictionResultPageState extends State<PredictionResultPage> {
         body: jsonEncode(widget.predictionData),
       );
 
-      print("Response Status Code: ${response.statusCode}");
-      print("Response Body: ${response.body}");
+      print("✅ Response Status Code: ${response.statusCode}");
+      print("📜 Raw Response Body: ${response.body}");
 
       if (response.statusCode == 200) {
-        // Parse the response based on its structure
-        final jsonResponse = jsonDecode(response.body);
-        
-        // Check if the response is a map or a list
-        if (jsonResponse is Map<String, dynamic>) {
-          // Handle single college response
+        dynamic jsonResponse;
+        try {
+          jsonResponse = jsonDecode(response.body);
+        } catch (e) {
+          print("❌ Invalid JSON: $e");
           setState(() {
-            predictedColleges = [jsonResponse]; // Wrap single object in a list
+            predictedColleges = [{"name": "Invalid API Response", "message": response.body}];
             isLoading = false;
           });
-        } else if (jsonResponse is List) {
-          // Handle list of colleges
-          setState(() {
-            predictedColleges = List<Map<String, dynamic>>.from(jsonResponse);
-            isLoading = false;
-          });
-        } else {
-          throw Exception('Unexpected response format');
+          return;
         }
+
+        List<Map<String, dynamic>> colleges = _extractCollegesFromResponse(jsonResponse);
+
+        print("📌 Extracted Colleges: ${colleges.map((c) => c['name']).toList()}");
+
+        setState(() {
+          predictedColleges = colleges.take(5).toList(); // Display only top 5 colleges
+          isLoading = false;
+        });
       } else {
         throw Exception('Failed to fetch predictions: ${response.statusCode}');
       }
@@ -66,15 +67,38 @@ class _PredictionResultPageState extends State<PredictionResultPage> {
         isLoading = false;
         errorMessage = 'Error fetching predictions: $e';
       });
-      print('Error fetching predictions: $e');
+      print('❌ Error fetching predictions: $e');
     }
+  }
+
+  List<Map<String, dynamic>> _extractCollegesFromResponse(dynamic response) {
+  List<Map<String, dynamic>> colleges = [];
+
+  if (response is Map<String, dynamic> && response.containsKey("top_5_colleges")) {
+    List<dynamic> topColleges = response["top_5_colleges"];
+    
+    for (var college in topColleges) {
+      if (college is Map<String, dynamic> && college.containsKey("college")) {
+        colleges.add({
+          "name": college["college"], // Extract the college name
+          "confidence": college["confidence"] ?? 0.0 // Confidence score (optional)
+        });
+      }
+    }
+  }
+
+  return colleges;
+}
+
+  bool _isLikelyCollegeObject(Map<String, dynamic> map) {
+    return map.containsKey('name') || map.containsKey('collegeName') || map.containsKey('location');
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Prediction Results"),
+        title: Text("Find Your Best-Fit College"),
         backgroundColor: Colors.blue.shade800,
       ),
       body: Container(
@@ -88,38 +112,31 @@ class _PredictionResultPageState extends State<PredictionResultPage> {
         child: isLoading
             ? Center(child: CircularProgressIndicator(color: Colors.white))
             : errorMessage.isNotEmpty
-                ? _buildErrorView()
-                : predictedColleges.isEmpty
-                    ? Center(
-                        child: Text(
-                          "No predictions found",
-                          style: TextStyle(color: Colors.white, fontSize: 18),
-                        ),
-                      )
-                    : _buildPredictionList(),
-      ),
-    );
-  }
-
-  Widget _buildErrorView() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            errorMessage,
-            style: TextStyle(color: Colors.white, fontSize: 16),
-          ),
-          SizedBox(height: 10),
-          ElevatedButton(
-            onPressed: _fetchPredictions,
-            child: Text("Retry"),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: Colors.blue.shade800,
-            ),
-          ),
-        ],
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text("Error", style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+                          SizedBox(height: 8),
+                          Text(errorMessage, style: TextStyle(color: Colors.white, fontSize: 16), textAlign: TextAlign.center),
+                          SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: () {
+                              setState(() {
+                                isLoading = true;
+                                errorMessage = '';
+                              });
+                              _fetchPredictions();
+                            },
+                            child: Text("Retry"),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                : _buildPredictionList(),
       ),
     );
   }
@@ -130,8 +147,8 @@ class _PredictionResultPageState extends State<PredictionResultPage> {
         Padding(
           padding: const EdgeInsets.all(16.0),
           child: Text(
-            "Predicted Colleges for You",
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+            "Top Colleges Matching Your Profile",
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
           ),
         ),
         Expanded(
@@ -141,7 +158,7 @@ class _PredictionResultPageState extends State<PredictionResultPage> {
             itemBuilder: (context, index) {
               return _buildCollegeCard(predictedColleges[index]);
             },
-            separatorBuilder: (context, index) => SizedBox(height: 16),
+            separatorBuilder: (context, index) => SizedBox(height: 10),
           ),
         ),
       ],
@@ -149,8 +166,11 @@ class _PredictionResultPageState extends State<PredictionResultPage> {
   }
 
   Widget _buildCollegeCard(Map<String, dynamic> college) {
+    String collegeName = college['name'] ?? 'Unknown College';
+    String location = college['location'] ?? 'N/A';
+    String imageUrl = college['image'] ?? 'https://via.placeholder.com/150';
+
     return Card(
-      margin: EdgeInsets.only(bottom: 16),
       elevation: 8,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       child: Column(
@@ -160,12 +180,7 @@ class _PredictionResultPageState extends State<PredictionResultPage> {
             height: 100,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.only(topLeft: Radius.circular(15), topRight: Radius.circular(15)),
-              image: DecorationImage(
-                image: NetworkImage(college['image']?.toString().isNotEmpty == true
-                    ? college['image']
-                    : 'https://via.placeholder.com/150'),
-                fit: BoxFit.cover,
-              ),
+              image: DecorationImage(image: NetworkImage(imageUrl), fit: BoxFit.cover),
             ),
           ),
           Padding(
@@ -173,69 +188,13 @@ class _PredictionResultPageState extends State<PredictionResultPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        college['name'] ?? college['college'] ?? 'Unknown College',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                      decoration: BoxDecoration(color: Colors.blue.shade700, borderRadius: BorderRadius.circular(20)),
-                      child: Text(
-                        "Match: ${college['matchPercentage'] ?? college['match'] ?? 90}%",
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ],
-                ),
+                Text(collegeName, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 SizedBox(height: 8),
-                Text(college['location'] ?? '${college['Country'] ?? widget.predictionData['Country']}', 
-                     style: TextStyle(color: Colors.grey.shade600)),
+                Text("Location: $location", style: TextStyle(color: Colors.grey.shade600)),
                 SizedBox(height: 8),
-                Row(
-                  children: [
-                    Icon(Icons.school, size: 16, color: Colors.blue.shade700),
-                    SizedBox(width: 4),
-                    Expanded(
-                      child: Text("Course: ${college['course'] ?? college['Course'] ?? widget.predictionData['Course'] ?? 'Unknown'}", 
-                           style: TextStyle(fontSize: 14)),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 4),
-                Row(
-                  children: [
-                    Icon(Icons.attach_money, size: 16, color: Colors.blue.shade700),
-                    SizedBox(width: 4),
-                    Text("Tuition: ${college['tuition'] ?? college['fees'] ?? 'Contact university'}",
-                         style: TextStyle(fontSize: 14)),
-                  ],
-                ),
-                SizedBox(height: 4),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(Icons.stars, size: 16, color: Colors.blue.shade700),
-                    SizedBox(width: 4),
-                    Expanded(
-                      child: Text("Requirements: ${_getRequirements(college)}",
-                           style: TextStyle(fontSize: 14)),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 12),
                 ElevatedButton(
-                  onPressed: () {}, // Add navigation or action here
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue.shade800,
-                    minimumSize: Size(double.infinity, 40),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  ),
-                  child: Text("View Details", style: TextStyle(color: Colors.white)),
+                  onPressed: () => _showCollegeDetails(college),
+                  child: Text("Explore College"),
                 ),
               ],
             ),
@@ -245,26 +204,7 @@ class _PredictionResultPageState extends State<PredictionResultPage> {
     );
   }
 
-  // Helper method to extract requirements from the response
-  String _getRequirements(Map<String, dynamic> college) {
-    if (college.containsKey('requirements') && college['requirements'] != null) {
-      return college['requirements'];
-    }
-    
-    List<String> reqs = [];
-    
-    if (college.containsKey('IELTS') && college['IELTS'] != null) {
-      reqs.add("IELTS: ${college['IELTS']}");
-    }
-    
-    if (college.containsKey('Plustwo') && college['Plustwo'] != null) {
-      reqs.add("Plus Two: ${college['Plustwo']}%");
-    }
-    
-    if (reqs.isEmpty) {
-      return "Contact university for details";
-    }
-    
-    return reqs.join(", ");
+  void _showCollegeDetails(Map<String, dynamic> college) {
+    // You can add more details inside this modal bottom sheet
   }
 }
