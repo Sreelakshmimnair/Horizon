@@ -1,18 +1,104 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
-class PredictionResultPage extends StatelessWidget {
+class PredictionResultPage extends StatefulWidget {
   final Map<String, dynamic> predictionData;
 
   const PredictionResultPage({Key? key, required this.predictionData}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    // Generate predicted college list based on input data
-    List<Map<String, dynamic>> predictedColleges = _generatePredictedColleges();
+  _PredictionResultPageState createState() => _PredictionResultPageState();
+}
 
+class _PredictionResultPageState extends State<PredictionResultPage> {
+  List<Map<String, dynamic>> predictedColleges = [];
+  bool isLoading = true;
+  String errorMessage = '';
+
+  static const String apiUrl = 'https://flask-8v3h.onrender.com/predict';
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchPredictions();
+  }
+
+  Future<void> _fetchPredictions() async {
+    try {
+      print("🚀 Sending request to API...");
+      print("Request Data: ${jsonEncode(widget.predictionData)}");
+
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(widget.predictionData),
+      );
+
+      print("✅ Response Status Code: ${response.statusCode}");
+      print("📜 Raw Response Body: ${response.body}");
+
+      if (response.statusCode == 200) {
+        dynamic jsonResponse;
+        try {
+          jsonResponse = jsonDecode(response.body);
+        } catch (e) {
+          print("❌ Invalid JSON: $e");
+          setState(() {
+            predictedColleges = [{"name": "Invalid API Response", "message": response.body}];
+            isLoading = false;
+          });
+          return;
+        }
+
+        List<Map<String, dynamic>> colleges = _extractCollegesFromResponse(jsonResponse);
+
+        print("📌 Extracted Colleges: ${colleges.map((c) => c['name']).toList()}");
+
+        setState(() {
+          predictedColleges = colleges.take(5).toList(); // Display only top 5 colleges
+          isLoading = false;
+        });
+      } else {
+        throw Exception('Failed to fetch predictions: ${response.statusCode}');
+      }
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+        errorMessage = 'Error fetching predictions: $e';
+      });
+      print('❌ Error fetching predictions: $e');
+    }
+  }
+
+  List<Map<String, dynamic>> _extractCollegesFromResponse(dynamic response) {
+  List<Map<String, dynamic>> colleges = [];
+
+  if (response is Map<String, dynamic> && response.containsKey("top_5_colleges")) {
+    List<dynamic> topColleges = response["top_5_colleges"];
+    
+    for (var college in topColleges) {
+      if (college is Map<String, dynamic> && college.containsKey("college")) {
+        colleges.add({
+          "name": college["college"], // Extract the college name
+          "confidence": college["confidence"] ?? 0.0 // Confidence score (optional)
+        });
+      }
+    }
+  }
+
+  return colleges;
+}
+
+  bool _isLikelyCollegeObject(Map<String, dynamic> map) {
+    return map.containsKey('name') || map.containsKey('collegeName') || map.containsKey('location');
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Prediction Results"),
+        title: Text("Find Your Best-Fit College"),
         backgroundColor: Colors.blue.shade800,
       ),
       body: Container(
@@ -23,55 +109,78 @@ class PredictionResultPage extends StatelessWidget {
             end: Alignment.bottomCenter,
           ),
         ),
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text(
-                "Predicted Colleges for You",
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-            Expanded(
-              child: ListView.builder(
-                padding: EdgeInsets.all(16),
-                itemCount: predictedColleges.length,
-                itemBuilder: (context, index) {
-                  return _buildCollegeCard(predictedColleges[index], index);
-                },
-              ),
-            ),
-          ],
-        ),
+        child: isLoading
+            ? Center(child: CircularProgressIndicator(color: Colors.white))
+            : errorMessage.isNotEmpty
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text("Error", style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+                          SizedBox(height: 8),
+                          Text(errorMessage, style: TextStyle(color: Colors.white, fontSize: 16), textAlign: TextAlign.center),
+                          SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: () {
+                              setState(() {
+                                isLoading = true;
+                                errorMessage = '';
+                              });
+                              _fetchPredictions();
+                            },
+                            child: Text("Retry"),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                : _buildPredictionList(),
       ),
     );
   }
 
-  Widget _buildCollegeCard(Map<String, dynamic> college, int index) {
+  Widget _buildPredictionList() {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Text(
+            "Top Colleges Matching Your Profile",
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+          ),
+        ),
+        Expanded(
+          child: ListView.separated(
+            padding: EdgeInsets.all(16),
+            itemCount: predictedColleges.length,
+            itemBuilder: (context, index) {
+              return _buildCollegeCard(predictedColleges[index]);
+            },
+            separatorBuilder: (context, index) => SizedBox(height: 10),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCollegeCard(Map<String, dynamic> college) {
+    String collegeName = college['name'] ?? 'Unknown College';
+    String location = college['location'] ?? 'N/A';
+    String imageUrl = college['image'] ?? 'https://via.placeholder.com/150';
+
     return Card(
-      margin: EdgeInsets.only(bottom: 16),
       elevation: 8,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(15),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             height: 100,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(15),
-                topRight: Radius.circular(15),
-              ),
-              image: DecorationImage(
-                image: AssetImage(college['image']),
-                fit: BoxFit.cover,
-              ),
+              borderRadius: BorderRadius.only(topLeft: Radius.circular(15), topRight: Radius.circular(15)),
+              image: DecorationImage(image: NetworkImage(imageUrl), fit: BoxFit.cover),
             ),
           ),
           Padding(
@@ -79,85 +188,13 @@ class PredictionResultPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        college['name'],
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: Colors.blue.shade700,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        "Match: ${college['matchPercentage']}%",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                Text(collegeName, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 SizedBox(height: 8),
-                Text(
-                  college['location'],
-                  style: TextStyle(color: Colors.grey.shade600),
-                ),
+                Text("Location: $location", style: TextStyle(color: Colors.grey.shade600)),
                 SizedBox(height: 8),
-                Row(
-                  children: [
-                    Icon(Icons.school, size: 16, color: Colors.blue.shade700),
-                    SizedBox(width: 4),
-                    Text(
-                      "Course: ${college['course']}",
-                      style: TextStyle(fontSize: 14),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 4),
-                Row(
-                  children: [
-                    Icon(Icons.attach_money, size: 16, color: Colors.blue.shade700),
-                    SizedBox(width: 4),
-                    Text(
-                      "Tuition: ${college['tuition']}",
-                      style: TextStyle(fontSize: 14),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 4),
-                Row(
-                  children: [
-                    Icon(Icons.stars, size: 16, color: Colors.blue.shade700),
-                    SizedBox(width: 4),
-                    Text(
-                      "Requirements: ${college['requirements']}",
-                      style: TextStyle(fontSize: 14),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 12),
                 ElevatedButton(
-                  onPressed: () {
-                    // Show more details if needed
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue.shade800,
-                    minimumSize: Size(double.infinity, 40),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  child: Text("View Details", style: TextStyle(color: Colors.white)),
+                  onPressed: () => _showCollegeDetails(college),
+                  child: Text("Explore College"),
                 ),
               ],
             ),
@@ -167,111 +204,7 @@ class PredictionResultPage extends StatelessWidget {
     );
   }
 
-  List<Map<String, dynamic>> _generatePredictedColleges() {
-    // This is where you would implement your actual prediction algorithm
-    // For now, returning mock data based on the input
-
-    String country = predictionData['country'] ?? 'Germany';
-    String course = predictionData['course'] ?? 'Computer Science';
-    
-    // Sample logic to determine colleges based on country
-    List<Map<String, dynamic>> colleges = [];
-    
-    if (country == 'Germany') {
-      colleges = [
-        {
-          'name': 'Technical University of Munich',
-          'location': 'Munich, Germany',
-          'image': 'assets/images/tum.jpg',
-          'matchPercentage': 95,
-          'course': course,
-          'tuition': '€1,500/semester',
-          'requirements': 'IELTS 6.5+',
-        },
-        {
-          'name': 'RWTH Aachen University',
-          'location': 'Aachen, Germany',
-          'image': 'assets/images/rwth.jpg',
-          'matchPercentage': 88,
-          'course': course,
-          'tuition': '€1,200/semester',
-          'requirements': 'IELTS 6.0+',
-        },
-        {
-          'name': 'Humboldt University of Berlin',
-          'location': 'Berlin, Germany',
-          'image': 'assets/images/humboldt.jpg',
-          'matchPercentage': 82,
-          'course': course,
-          'tuition': '€1,300/semester',
-          'requirements': 'IELTS 6.5+',
-        },
-      ];
-    } else if (country == 'Canada') {
-      colleges = [
-        {
-          'name': 'University of Toronto',
-          'location': 'Toronto, Canada',
-          'image': 'assets/images/toronto.jpg',
-          'matchPercentage': 91,
-          'course': course,
-          'tuition': 'CAD 55,000/year',
-          'requirements': 'IELTS 6.5+',
-        },
-        {
-          'name': 'University of British Columbia',
-          'location': 'Vancouver, Canada',
-          'image': 'assets/images/ubc.jpg',
-          'matchPercentage': 87,
-          'course': course,
-          'tuition': 'CAD 49,000/year',
-          'requirements': 'IELTS 6.5+',
-        },
-        {
-          'name': 'McGill University',
-          'location': 'Montreal, Canada',
-          'image': 'assets/images/mcgill.jpg',
-          'matchPercentage': 84,
-          'course': course,
-          'tuition': 'CAD 51,000/year',
-          'requirements': 'IELTS 6.5+',
-        },
-      ];
-    } else if (country == 'UK') {
-      colleges = [
-        {
-          'name': 'Imperial College London',
-          'location': 'London, UK',
-          'image': 'assets/images/imperial.jpg',
-          'matchPercentage': 93,
-          'course': course,
-          'tuition': '£35,000/year',
-          'requirements': 'IELTS 7.0+',
-        },
-        {
-          'name': 'University of Oxford',
-          'location': 'Oxford, UK',
-          'image': 'assets/images/oxford.jpg',
-          'matchPercentage': 90,
-          'course': course,
-          'tuition': '£38,000/year',
-          'requirements': 'IELTS 7.0+',
-        },
-        {
-          'name': 'University of Manchester',
-          'location': 'Manchester, UK',
-          'image': 'assets/images/manchester.jpg',
-          'matchPercentage': 85,
-          'course': course,
-          'tuition': '£28,000/year',
-          'requirements': 'IELTS 6.5+',
-        },
-      ];
-    }
-    
-    // You would implement more sophisticated logic here to match colleges
-    // based on all the user inputs like test scores, preferences, etc.
-    
-    return colleges;
+  void _showCollegeDetails(Map<String, dynamic> college) {
+    // You can add more details inside this modal bottom sheet
   }
 }

@@ -27,6 +27,7 @@ class _CollegePredictorPageState extends State<CollegePredictorPage> {
   String? selectedCountry;
   String? selectedStream;
   String? selectedCourse;
+  String? selectedDuration;
   String higherStudies = "Yes";
   String internshipAvailable = "Yes";
   String partTimeJob = "Yes";
@@ -34,6 +35,7 @@ class _CollegePredictorPageState extends State<CollegePredictorPage> {
   String predictionResult = "";
   bool isLoading = false;
   final TextEditingController percentageController = TextEditingController();
+  final TextEditingController feesController = TextEditingController();
   
   // Sliders values for language tests
   double ieltsScore = 6.0;
@@ -121,7 +123,18 @@ class _CollegePredictorPageState extends State<CollegePredictorPage> {
       "VetMB Veterinary Medicine"
     ],
     "Nursing": [
-      "Practical Nursing - Diploma"
+      "Practical Nursing - Diploma",
+      "Adult Nursing BSc",
+      "Adult Nursing, BN (Hons)",
+      "BSc (Hons) Adult Nursing",
+      "BSc (Hons) Nursing",
+      "BSc (Hons) Nursing (Mental Health)",
+      "BSc (Hons) Nursing Adult",
+      "BSc (Hons) Nursing Science",
+      "BN Nursing Studies",
+      "BNurs in Nursing (Adult)",
+      "BNurs in Nursing (Mental Health)",
+
     ],
     "Science": [
       "Jewellery & Metal Design BDes",
@@ -200,31 +213,128 @@ class _CollegePredictorPageState extends State<CollegePredictorPage> {
     {"name": "Canada", "flag": "assets/images/canada.png"},
     {"name": "UK", "flag": "assets/images/uk.jpg"},
   ];
+  double parseFees(String fees) {
+  try {
+    // Remove spaces and convert lowercase
+    fees = fees.trim().toLowerCase();
 
-  Future<void> predictCollege() async {
-    setState(() {
-      isLoading = true;
-    });
-    
-    try {
-      // Using a placeholder for API logic
-      // This would normally call the API, but we'll simulate it for now
-      await Future.delayed(Duration(seconds: 1)); // Simulate network delay
-      
-      // Set a sample prediction result
+    // Check if the value is a range (e.g., "15k-30k")
+    if (fees.contains('-')) {
+      List<String> parts = fees.split('-');
+      if (parts.length == 2) {
+        double start = parseFees(parts[0]);
+        double end = parseFees(parts[1]);
+        return (start + end) / 2; // Take the average of the range
+      }
+    }
+
+    // Convert "15k" to 15000
+    if (fees.endsWith('k')) {
+      return double.parse(fees.replaceAll('k', '')) * 1000;
+    }
+
+    // Convert regular numbers
+    return double.parse(fees);
+  } catch (e) {
+    print("Invalid fee format: $fees");
+    return 0.0; // Default to 0.0 if parsing fails
+  }
+}
+
+Future<void> predictCollege() async {
+  setState(() {
+    isLoading = true;
+  });
+
+  try {
+    final url = Uri.parse("https://flask-8v3h.onrender.com/predict");
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "Country": selectedCountry,
+        "Course": selectedCourse,
+        "IELTS": ieltsScore,
+        "Plustwo": double.tryParse(percentageController.text.trim()) ?? 0.0,
+        "TOEFL": toeflScore,
+        "PTE": pteScore,
+        "Fees": parseFees(feesController.text.trim()),
+        "Duration": selectedDuration,
+        "Internship": internshipAvailable,
+        "Partime": partTimeJob,
+        "Stayback": stayBack,
+        "HigherStudies": higherStudies,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final result = jsonDecode(response.body);
+      List<Map<String, dynamic>> colleges = [];
+
+      if (result is List) {
+        // API returns a list of colleges
+        colleges = List<Map<String, dynamic>>.from(result);
+      } else if (result is Map<String, dynamic> && result.containsKey("college")) {
+        // API returns a single college, wrap it in a list
+        colleges = [
+          {
+            "name": result["college"],
+            "matchPercentage": "N/A",
+            "image": "https://via.placeholder.com/150",
+            "location": "N/A",
+            "tuition": "N/A",
+            "requirements": "N/A"
+          }
+        ];
+      }
+
+      // Store the number of actual colleges received
+      int collegeCount = colleges.length;
+
+      // Ensure exactly 5 colleges are displayed
+      while (colleges.length < 5) {
+        colleges.add({
+          "name": "Unknown College ${colleges.length + 1}",
+          "matchPercentage": "N/A",
+          "image": "https://via.placeholder.com/150",
+          "location": "N/A",
+          "tuition": "N/A",
+          "requirements": "N/A"
+        });
+      }
+
+      if (mounted) {
+        setState(() {
+          predictionResult = "Found $collegeCount college(s)";
+          isLoading = false;
+        });
+
+        // Navigate to the results page with processed data
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => PredictionResultPage(
+              predictionData: {
+                "colleges": colleges,
+                "collegeCount": collegeCount, // Pass count to next page
+              },
+            ),
+          ),
+        );
+      }
+    } else {
+      throw Exception("Server error: ${response.statusCode}");
+    }
+  } catch (e) {
+    if (mounted) {
       setState(() {
-        predictionResult = "University of Sample";
-        isLoading = false;
-      });
-      
-      return;
-    } catch (e) {
-      setState(() {
-        predictionResult = "Error: Unable to predict.";
+        predictionResult = "Error: ${e.toString()}";
         isLoading = false;
       });
     }
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -305,7 +415,7 @@ class _CollegePredictorPageState extends State<CollegePredictorPage> {
                 _buildLabel("PTE Score: ${pteScore.toStringAsFixed(0)}"),
                 _buildSlider(
                   value: pteScore,
-                  min: 10.0,
+                  min: 0.0,
                   max: 90.0,
                   divisions: 80,
                   onChanged: (value) {
@@ -314,6 +424,11 @@ class _CollegePredictorPageState extends State<CollegePredictorPage> {
                     });
                   },
                 ),
+                _buildLabel("Enter the fee range (e.g., 15k-20k) *"),
+                _buildTextField("15k-20k", feesController),
+                _buildLabel("Select Duration (Years)"),
+                _buildDurationDropdown(),
+
 
                 SizedBox(height: 20),
                 _buildLabel("Higher Studies Possible?"),
@@ -550,6 +665,35 @@ class _CollegePredictorPageState extends State<CollegePredictorPage> {
       ),
     );
   }
+  Widget _buildDurationDropdown() {
+  return Container(
+    padding: EdgeInsets.symmetric(horizontal: 15),
+    decoration: BoxDecoration(
+      color: Colors.white.withOpacity(0.2),
+      borderRadius: BorderRadius.circular(10),
+    ),
+    child: DropdownButtonFormField<String>(
+      dropdownColor: Colors.white,
+      value: selectedDuration,
+      hint: Text("Choose duration", style: TextStyle(color: Colors.white)),
+      items: ["1", "2", "3", "4"].map((duration) {
+        return DropdownMenuItem<String>(
+          value: duration,
+          child: Text(
+            "$duration Years",
+            style: TextStyle(color: Colors.black),
+          ),
+        );
+      }).toList(),
+      onChanged: (String? newValue) {
+        setState(() {
+          selectedDuration = newValue;
+        });
+      },
+      decoration: InputDecoration(border: InputBorder.none),
+    ),
+  );
+}
 
   Widget _buildYesNoDropdown(ValueChanged<String?>? onChanged, String value) {
     return Container(
@@ -574,20 +718,26 @@ class _CollegePredictorPageState extends State<CollegePredictorPage> {
     );
   }
 
-  void _navigateToPredictionResult() {
-    // Collect all the input data
+ void _navigateToPredictionResult() async {
+  setState(() {
+    isLoading = true;
+  });
+
+  try {
+    // Format the data according to what your API expects
     Map<String, dynamic> predictionData = {
-      'country': selectedCountry,
-      'stream': selectedStream,
-      'course': selectedCourse,
-      'percentage': percentageController.text,
-      'ielts': ieltsScore.toString(),
-      'toefl': toeflScore.toString(),
-      'pte': pteScore.toString(),
-      'higherStudies': higherStudies,
-      'internshipAvailable': internshipAvailable,
-      'partTimeJob': partTimeJob,
-      'stayBack': stayBack,
+      "Country": selectedCountry,
+      "Course": selectedCourse,
+      "IELTS": ieltsScore,
+      "Plustwo": double.tryParse(percentageController.text.trim()) ?? 0.0,
+      "TOEFL": toeflScore,
+      "PTE": pteScore,
+      "Fees": parseFees(feesController.text.trim()),
+      "Duration": selectedDuration,
+      "Internship": internshipAvailable,
+      "Partime": partTimeJob,
+      "Stayback": stayBack,
+      "HigherStudies": higherStudies,
     };
     
     // Reset loading state
@@ -595,12 +745,23 @@ class _CollegePredictorPageState extends State<CollegePredictorPage> {
       isLoading = false;
     });
     
-    // Navigate to the prediction result page with the collected data
+    // Navigate to the prediction result page with the properly formatted data
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => PredictionResultPage(predictionData: predictionData),
       ),
     );
+  } catch (e) {
+    setState(() {
+      isLoading = false;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Error preparing prediction data: ${e.toString()}"),
+        backgroundColor: Colors.red,
+      )
+    );
   }
+}
 }
