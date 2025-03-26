@@ -12,7 +12,20 @@
           "package_name": "com.example.horizon"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "353924248823-0c6ql7a5ltlsodoncqp18ogipunfjar5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.horizon",
+            "certificate_hash": "8d7573a610f291d52a356fca4173a8241b520887"
+          }
+        },
+        {
+          "client_id": "353924248823-vmfeho8gnhr9uthjv0uv4gbd152a80un.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyB-HfpQg_Fkf149sn86kEayK89Gm_LItnc"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "353924248823-vmfeho8gnhr9uthjv0uv4gbd152a80un.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "353924248823-hed0tffag5b1jsevaoghsmoi4ooqc52j.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.horizon"
+              }
+            }
+          ]
         }
       }
     }

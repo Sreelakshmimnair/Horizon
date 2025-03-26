@@ -1,0 +1,2 @@
+C:/Users/sayan/OneDrive/Desktop/test - Copy/Horizon/android/app/.cxx/RelWithDebInfo/51523440/arm64-v8a/CMakeFiles/edit_cache.dir
+C:/Users/sayan/OneDrive/Desktop/test - Copy/Horizon/android/app/.cxx/RelWithDebInfo/51523440/arm64-v8a/CMakeFiles/rebuild_cache.dir

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import 'homepage.dart'; // Import the HomePage
+import 'homepage.dart';
+import 'prediction_result_page.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 void main() {
   runApp(MyApp());
@@ -22,16 +25,175 @@ class CollegePredictorPage extends StatefulWidget {
 
 class _CollegePredictorPageState extends State<CollegePredictorPage> {
   String? selectedCountry;
+  String? selectedStream;
+  String? selectedCourse;
   String higherStudies = "Yes";
   String internshipAvailable = "Yes";
   String partTimeJob = "Yes";
   String stayBack = "Yes";
-
-  final TextEditingController courseController = TextEditingController();
-  final TextEditingController ieltsController = TextEditingController();
+  String predictionResult = "";
+  bool isLoading = false;
   final TextEditingController percentageController = TextEditingController();
-  final TextEditingController toeflController = TextEditingController();
-  final TextEditingController pteController = TextEditingController();
+  
+  // Sliders values for language tests
+  double ieltsScore = 6.0;
+  double toeflScore = 80.0;
+  double pteScore = 50.0;
+
+  // Streams available for selection
+  final List<String> streams = [
+    "Arts",
+    "Commerce",
+    "Engineering",
+    "Medical",
+    "Nursing",
+    "Science",
+    "Law",
+    "Aviation"
+  ];
+
+  // Courses categorized by streams
+  final Map<String, List<String>> coursesByStream = {
+    "Arts": [
+      "Honours Bachelor of Social Work",
+      "Hospitality and Tourism Management BA",
+      "International Business BA",
+      "International Business Management BA (Hons)",
+      "Marketing BA",
+      "Philosophy and Economics BA",
+      "Politics and International Relations BA",
+      "Social Work BA (Hons)",
+      "Sociology BA",
+      "Statistics (BA)",
+      "Tourism Management with Language, BA (Hons)",
+      "UG Diploma in Journalism Communications",
+      "Undergraduate Diploma in Digital Visual Effects",
+      "Advanced Diploma in Graphic Design"
+    ],
+    "Commerce": [
+      "International Business (BComm)",
+      "Marketing (BComm)",
+      "International Business Management BA (Hons)",
+      "International Business with Marketing BSc",
+      "International Management BSc (Hons)",
+      "Marketing and Management BSc",
+      "Marketing, BSc (Hons)",
+      "Marketing, Business - Diploma"
+    ],
+    "Engineering": [
+      "Mechanical Engineering (BEng)",
+      "Mechanical Engineering BEng (Hons)",
+      "Nuclear Engineering BEng (Hons)",
+      "Mechatronics Engineering BEng",
+      "Robotics BEng",
+      "Robotics Engineering - BEng",
+      "Software Engineering BEng",
+      "Software Engineering BEng (Hons)",
+      "Mechanical Engineering (B. Sc.)",
+      "B.Sc. in Electrical Engineering and Information Systems Technology",
+      "Bachelor of Science in Computer Science and Software Engineering",
+      "Software Engineering BSc (Hons)",
+      "Integrated Degree program in Architecture",
+      "Integrated Degree program in Mechanical Engineering",
+      "Mechanical Engineering Technology Advanced Diploma",
+      "Mechanical Engineering Technology- Diploma",
+      "Robotics and Artificial Intelligence Meng"
+    ],
+    "Medical": [
+      "Medicine BM5 (BMBS)",
+      "MBBS Medicine & Surgery",
+      "Paramedic Science BSc",
+      "Paramedic Science BSc (Hons)",
+      "Pharmaceutical Sciences BSc",
+      "Pharmaceutical and Chemical Sciences BSc (Hons)",
+      "Pharmaceutical science BSc(Hons)",
+      "Pharmaceutical and cosmetic science BSc",
+      "Pharmacology BSc",
+      "Pharmacology BSc/MSci",
+      "Physiotherapy BSc",
+      "MB, BChir Medicine",
+      "MBBCH in Medicine",
+      "MBBS Medicine",
+      "MBBS/BSc Medicine",
+      "MBChB",
+      "MBChB Medicine",
+      "Medicine and Surgery MBChB",
+      "VetMB Veterinary Medicine"
+    ],
+    "Nursing": [
+      "Practical Nursing - Diploma"
+    ],
+    "Science": [
+      "Jewellery & Metal Design BDes",
+      "International Tourism Management BSc (Hons)",
+      "Mathematics BSc (Hons)",
+      "Microbiology BSc (Hons)",
+      "Psychology BSc (Hons)",
+      "Marine Biology, BSc (Hons)",
+      "Psychology BSc Hons",
+      "International Tourism and Hospitality Management BSc",
+      "Logistics with Supply Chain Management BSc",
+      "Marine & Freshwater Biology BSc",
+      "Mathematics and Physics BSc",
+      "Mathematics with Computer Science BSc",
+      "Mathematics with Economics BSc",
+      "Media and Communication BSc",
+      "Medical Science Bmed Sci(Hons)",
+      "Molecular Biotechnology",
+      "Neuroscience (BSc)",
+      "Physics (BSc)",
+      "Physics and Astrophysics (International Study) BSc",
+      "Psychology BSc",
+      "Psychology and Cognitive Neuroscience BSc",
+      "Psychology with Criminology BSc",
+      "Psychology with Criminology BSc(Hons)",
+      "Psychology with Education BSc",
+      "Science and Engineering for Social Change BSc",
+      "Statistics, Economics and Finance BSc",
+      "Zoology BSc",
+      "ZoologyBSc",
+      "Honours Bachelor of Science in Computer Science Degree with Computer Programming Diploma",
+      "Honours Bachelor of Technology (Construction Management)"
+    ],
+    "Law": [
+      "LLB (Hons)",
+      "LLB (Hons) Bachelor of Laws",
+      "LLB (Hons) Business Law",
+      "LLB (Hons) Law",
+      "LLB (Hons) Law (Crime and Criminal Justice)",
+      "LLB (Hons) Law and Criminal Justice",
+      "LLB (Hons) in Law With Criminology",
+      "LLB Bachelor of Laws",
+      "LLB Law",
+      "LLB Law with Business",
+      "LLB Law with Criminology",
+      "LLB(Hons) Law",
+      "LLB/LLB (Hons) Law",
+      "LLBLaw with Business Management",
+      "LLBLaw with Criminology",
+      "Law (Eng/NI) with Energy Law LLB",
+      "Law (Individual Rights)LLB (Hons)",
+      "Law (LLB)",
+      "Law LLB",
+      "Law LLB (Hons)",
+      "Law LLB Hons",
+      "Law LLB(Hons)",
+      "Law with Criminal Justice LLB",
+      "Law with Criminology -LLB (Hons)",
+      "Law with Criminology LLB (Hons)",
+      "Law with Criminology, LLB (Hons)",
+      "Law with CriminologyLLB",
+      "Law with Social Policy, LLB (Hons)",
+      "Law, LLB Hons",
+      "Law- LLB (Hons)",
+      "LawLLB"
+    ],
+    "Aviation": [
+      "Aviation Management",
+      "Aviation Technology",
+      "Commercial Pilot License"
+    ]
+  };
 
   final List<Map<String, String>> countries = [
     {"name": "Germany", "flag": "assets/images/germany.png"},
@@ -39,6 +201,59 @@ class _CollegePredictorPageState extends State<CollegePredictorPage> {
     {"name": "UK", "flag": "assets/images/uk.jpg"},
   ];
 
+Future<void> predictCollege() async {
+  setState(() {
+    isLoading = true;
+  });
+
+  try {
+    final url = Uri.parse("https://flask-8v3h.onrender.com/predict");
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "Country": selectedCountry,
+        "Course": selectedCourse,
+        "IELTS": ieltsScore,
+        "Plustwo": double.tryParse(percentageController.text.trim()) ?? 0.0,
+        "TOEFL": toeflScore,
+        "PTE": pteScore,
+        "Internship": internshipAvailable,
+        "Partime": partTimeJob,
+        "Stayback": stayBack,
+        "HigherStudies": higherStudies,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final result = jsonDecode(response.body);
+
+      if (mounted) {
+        setState(() {
+          predictionResult = result["college"] ?? "No prediction found.";
+          isLoading = false;
+        });
+
+        // Navigate to the next page with data
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => PredictionResultPage(predictionData: result),
+          ),
+        );
+      }
+    } else {
+      throw Exception("Server error: ${response.statusCode}");
+    }
+  } catch (e) {
+    if (mounted) {
+      setState(() {
+        predictionResult = "Error: ${e.toString()}";
+        isLoading = false;
+      });
+    }
+  }
+}
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -48,7 +263,7 @@ class _CollegePredictorPageState extends State<CollegePredictorPage> {
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () {
-            Navigator.pop(context); // Go back to the previous page (HomePage)
+            Navigator.pop(context);
           },
         ),
       ),
@@ -78,20 +293,54 @@ class _CollegePredictorPageState extends State<CollegePredictorPage> {
                 ),
                 SizedBox(height: 20),
                 _buildLabel("Select Country"),
-                _buildDropdown(),
-                _buildTextField("Course", courseController),
+                _buildCountryDropdown(),
+                
+                _buildLabel("Select Stream"),
+                _buildStreamDropdown(),
+                
+                _buildLabel("Select Course"),
+                _buildCourseDropdown(),
+                
                 _buildTextField("+2 Percentage", percentageController, keyboardType: TextInputType.number),
 
-                // IELTS, TOEFL, PTE in a single row
-                _buildLabel("Language Scores"),
-                Row(
-                  children: [
-                    Expanded(child: _buildSmallTextField("IELTS", ieltsController)),
-                    SizedBox(width: 8),
-                    Expanded(child: _buildSmallTextField("TOEFL", toeflController)),
-                    SizedBox(width: 8),
-                    Expanded(child: _buildSmallTextField("PTE", pteController)),
-                  ],
+                // Language score sliders
+                _buildLabel("IELTS Score: ${ieltsScore.toStringAsFixed(1)}"),
+                _buildSlider(
+                  value: ieltsScore,
+                  min: 1.0,
+                  max: 9.0,
+                  divisions: 16,
+                  onChanged: (value) {
+                    setState(() {
+                      ieltsScore = value;
+                    });
+                  },
+                ),
+
+                _buildLabel("TOEFL Score: ${toeflScore.toStringAsFixed(0)}"),
+                _buildSlider(
+                  value: toeflScore,
+                  min: 0.0,
+                  max: 120.0,
+                  divisions: 120,
+                  onChanged: (value) {
+                    setState(() {
+                      toeflScore = value;
+                    });
+                  },
+                ),
+
+                _buildLabel("PTE Score: ${pteScore.toStringAsFixed(0)}"),
+                _buildSlider(
+                  value: pteScore,
+                  min: 0.0,
+                  max: 90.0,
+                  divisions: 80,
+                  onChanged: (value) {
+                    setState(() {
+                      pteScore = value;
+                    });
+                  },
                 ),
 
                 SizedBox(height: 20),
@@ -110,7 +359,28 @@ class _CollegePredictorPageState extends State<CollegePredictorPage> {
                 SizedBox(height: 20),
                 Center(
                   child: ElevatedButton(
-                    onPressed: _showPredictionResult,
+                    onPressed: () async {
+                      if (selectedCountry == null || selectedStream == null || selectedCourse == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text("Please select country, stream and course"),
+                            backgroundColor: Colors.red,
+                          )
+                        );
+                        return;
+                      }
+                      
+                      // Show loading indicator
+                      setState(() {
+                        isLoading = true;
+                      });
+                      
+                      // Simulate API call
+                      await Future.delayed(Duration(seconds: 1));
+                      
+                      // Navigate directly to result page without waiting for API
+                      _navigateToPredictionResult();
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
                       padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
@@ -120,18 +390,12 @@ class _CollegePredictorPageState extends State<CollegePredictorPage> {
                       elevation: 8,
                     ),
                     child: Text(
-                      "Predict",
+                      isLoading ? "Loading..." : "Predict",
                       style: TextStyle(fontSize: 18, color: Colors.blue.shade800, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),
                 SizedBox(height: 20),
-                Center(
-                  child: Text(
-                    "Prediction Result:",
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
-                  ),
-                ),
               ],
             ),
           ),
@@ -140,7 +404,33 @@ class _CollegePredictorPageState extends State<CollegePredictorPage> {
     );
   }
 
-  Widget _buildDropdown() {
+  Widget _buildSlider({
+    required double value,
+    required double min,
+    required double max,
+    required int divisions,
+    required ValueChanged<double> onChanged,
+  }) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Slider(
+        value: value,
+        min: min,
+        max: max,
+        divisions: divisions,
+        label: value.toStringAsFixed(1),
+        activeColor: Colors.white,
+        inactiveColor: Colors.white.withOpacity(0.3),
+        onChanged: onChanged,
+      ),
+    );
+  }
+
+  Widget _buildCountryDropdown() {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 15),
       decoration: BoxDecoration(
@@ -180,6 +470,81 @@ class _CollegePredictorPageState extends State<CollegePredictorPage> {
     );
   }
 
+  Widget _buildStreamDropdown() {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 15),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: DropdownButtonFormField<String>(
+        dropdownColor: Colors.white,
+        value: selectedStream,
+        hint: Text("Choose a stream", style: TextStyle(color: Colors.white)),
+        items: streams.map((stream) {
+          return DropdownMenuItem<String>( 
+            value: stream,
+            child: Text(
+              stream,
+              style: TextStyle(color: Colors.black),
+            ),
+          );
+        }).toList(),
+        onChanged: (String? newValue) {
+          setState(() {
+            selectedStream = newValue;
+            // Reset the selected course when stream changes
+            selectedCourse = null;
+          });
+        },
+        decoration: InputDecoration(border: InputBorder.none),
+      ),
+    );
+  }
+
+  Widget _buildCourseDropdown() {
+    // Get courses based on selected stream
+    List<String> courses = selectedStream != null 
+        ? coursesByStream[selectedStream] ?? []
+        : [];
+    
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 15),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: DropdownButtonFormField<String>(
+        dropdownColor: Colors.white,
+        value: selectedCourse,
+        hint: Text(
+          selectedStream == null 
+              ? "Select a stream first" 
+              : "Choose a course", 
+          style: TextStyle(color: Colors.white)
+        ),
+        items: courses.map((course) {
+          return DropdownMenuItem<String>( 
+            value: course,
+            child: Text(
+              course,
+              style: TextStyle(color: Colors.black),
+            ),
+          );
+        }).toList(),
+        onChanged: selectedStream == null 
+            ? null 
+            : (String? newValue) {
+                setState(() {
+                  selectedCourse = newValue;
+                });
+              },
+        decoration: InputDecoration(border: InputBorder.none),
+        isExpanded: true, // Ensures long text doesn't get cut off
+      ),
+    );
+  }
+
   Widget _buildTextField(String label, TextEditingController controller, {TextInputType keyboardType = TextInputType.text}) {
     return Padding(
       padding: const EdgeInsets.only(top: 15),
@@ -199,26 +564,6 @@ class _CollegePredictorPageState extends State<CollegePredictorPage> {
             labelStyle: TextStyle(color: Colors.white),
             border: InputBorder.none,
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSmallTextField(String label, TextEditingController controller) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 10),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: TextField(
-        controller: controller,
-        keyboardType: TextInputType.number,
-        style: TextStyle(color: Colors.white),
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle: TextStyle(color: Colors.white),
-          border: InputBorder.none,
         ),
       ),
     );
@@ -252,21 +597,53 @@ class _CollegePredictorPageState extends State<CollegePredictorPage> {
           );
         }).toList(),
         underline: SizedBox(),
+        isExpanded: true,
       ),
     );
   }
 
-  void _showPredictionResult() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.blue.shade900,
-        title: Text("Prediction Result", style: TextStyle(color: Colors.white)),
-        content: Text("Your predicted college will be displayed here.", style: TextStyle(color: Colors.white)),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text("OK", style: TextStyle(color: Colors.white))),
-        ],
+ void _navigateToPredictionResult() async {
+  setState(() {
+    isLoading = true;
+  });
+
+  try {
+    // Format the data according to what your API expects
+    Map<String, dynamic> predictionData = {
+      "Country": selectedCountry,
+      "Course": selectedCourse,
+      "IELTS": ieltsScore,
+      "Plustwo": double.tryParse(percentageController.text.trim()) ?? 0.0,
+      "TOEFL": toeflScore,
+      "PTE": pteScore,
+      "Internship": internshipAvailable,
+      "Partime": partTimeJob,
+      "Stayback": stayBack,
+      "HigherStudies": higherStudies,
+    };
+    
+    // Reset loading state
+    setState(() {
+      isLoading = false;
+    });
+    
+    // Navigate to the prediction result page with the properly formatted data
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PredictionResultPage(predictionData: predictionData),
       ),
     );
+  } catch (e) {
+    setState(() {
+      isLoading = false;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Error preparing prediction data: ${e.toString()}"),
+        backgroundColor: Colors.red,
+      )
+    );
   }
+}
 }

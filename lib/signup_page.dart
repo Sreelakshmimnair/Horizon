@@ -15,16 +15,15 @@ class _SignUpPageState extends State<SignUpPage> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
-  final TextEditingController _otpController = TextEditingController();
   
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   
   bool _isLoading = false;
-  bool _isPhoneVerified = false;
-  String? _verificationId;
-  int? _resendToken;
-
+  bool _isEmailVerified = false;
+  bool _isEmailSent = false;
+  User? _verifiedUser;
+  
   @override
   void dispose() {
     _fullNameController.dispose();
@@ -32,12 +31,26 @@ class _SignUpPageState extends State<SignUpPage> {
     _phoneController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
-    _otpController.dispose();
     super.dispose();
   }
   
-  // Function to register user with email and password
-  Future<void> _registerUser() async {
+  // Check email validation first (without creating temp user)
+  Future<void> _verifyEmail() async {
+    if (_emailController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a valid email address')),
+      );
+      return;
+    }
+    
+    // Check password fields
+    if (_passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a password')),
+      );
+      return;
+    }
+    
     if (_passwordController.text != _confirmPasswordController.text) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Passwords do not match')),
@@ -50,18 +63,137 @@ class _SignUpPageState extends State<SignUpPage> {
         _isLoading = true;
       });
       
-      // Create user with email and password
+      // Check if email is already in use
+      List<String> methods = await _auth.fetchSignInMethodsForEmail(_emailController.text.trim());
+      if (methods.isNotEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('This email is already registered. Please use a different email or login.')),
+        );
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+      
+      // Create user with the user's chosen password directly
       UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
         email: _emailController.text.trim(),
-        password: _passwordController.text,
+        password: _passwordController.text, // Use the user's password from the start
       );
       
+      _verifiedUser = userCredential.user;
+      
+      // Send verification email
+      await _verifiedUser!.sendEmailVerification();
+      
+      // Set up listener for auth state changes to check when email is verified
+      _setupEmailVerificationListener(_verifiedUser!);
+      
+      setState(() {
+        _isEmailSent = true;
+        _isLoading = false;
+      });
+      
+      // Show verification dialog
+      _showEmailVerificationDialog();
+      
+    } on FirebaseAuthException catch (e) {
+      debugPrint('Email verification error: ${e.code} - ${e.message}');
+      setState(() {
+        _isLoading = false;
+      });
+      
+      String errorMessage = 'Failed to send verification email';
+      if (e.code == 'invalid-email') {
+        errorMessage = 'The email address is invalid.';
+      } else if (e.code == 'email-already-in-use') {
+        errorMessage = 'The email is already registered. Please login instead.';
+      } else if (e.code == 'weak-password') {
+        errorMessage = 'The password is too weak. Please use a stronger password.';
+      }
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage)),
+      );
+    } catch (e) {
+      debugPrint('Email verification general error: $e');
+      setState(() {
+        _isLoading = false;
+      });
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${e.toString()}')),
+      );
+    }
+  }
+  
+  // Set up listener to check for email verification
+  void _setupEmailVerificationListener(User user) {
+    // Set up a timer to periodically check if the email is verified
+    Stream.periodic(const Duration(seconds: 3)).listen((_) async {
+      if (_isEmailVerified) return;
+      
+      try {
+        // Reload the user to get the updated status
+        await user.reload();
+        User? refreshedUser = _auth.currentUser;
+        
+        if (refreshedUser != null && refreshedUser.emailVerified) {
+          setState(() {
+            _isEmailVerified = true;
+          });
+          
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Email verified successfully!')),
+          );
+          
+          // Close verification dialog if it's open
+          Navigator.of(context).popUntil((route) => route.isFirst);
+        }
+      } catch (e) {
+        debugPrint('Error checking email verification: $e');
+      }
+    });
+  }
+  
+  // Complete registration after email is verified
+  Future<void> _registerUser() async {
+    if (_fullNameController.text.isEmpty ||
+        _emailController.text.isEmpty ||
+        _passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill all required fields')),
+      );
+      return;
+    }
+    
+    if (!_isEmailVerified) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please verify your email first')),
+      );
+      return;
+    }
+    
+    try {
+      setState(() {
+        _isLoading = true;
+      });
+      
+      // Ensure user is signed in
+      if (_auth.currentUser == null) {
+        // If somehow the user is not signed in, sign in with the provided credentials
+        await _auth.signInWithEmailAndPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+        );
+      }
+      
       // Store additional user info in Firestore
-      await _firestore.collection('users').doc(userCredential.user!.uid).set({
+      await _firestore.collection('users').doc(_auth.currentUser!.uid).set({
         'fullName': _fullNameController.text,
         'email': _emailController.text,
         'phoneNumber': _phoneController.text,
-        'phoneVerified': _isPhoneVerified,
+        'emailVerified': _isEmailVerified,
         'createdAt': Timestamp.now(),
       });
       
@@ -70,18 +202,25 @@ class _SignUpPageState extends State<SignUpPage> {
       );
       
       // Navigate to home screen or login screen
+      Navigator.pushReplacementNamed(context, '/home'); // Change this to your route
       
     } on FirebaseAuthException catch (e) {
+      debugPrint('Firebase Auth Error: ${e.code} - ${e.message}');
       String message = 'An error occurred';
-      if (e.code == 'weak-password') {
-        message = 'The password provided is too weak.';
-      } else if (e.code == 'email-already-in-use') {
-        message = 'The account already exists for that email.';
+      if (e.code == 'user-not-found' || e.code == 'wrong-password') {
+        message = 'There was a problem with your account. Please verify your email again.';
+        // Sign out the user to start fresh
+        await _auth.signOut();
+        setState(() {
+          _isEmailVerified = false;
+          _isEmailSent = false;
+        });
       }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(message)),
       );
     } catch (e) {
+      debugPrint('Registration error: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.toString())),
       );
@@ -92,262 +231,86 @@ class _SignUpPageState extends State<SignUpPage> {
     }
   }
   
-  // Format phone number to ensure it has country code
-  String _formatPhoneNumber(String phone) {
-    // If phone doesn't start with +, add country code +1 (for US)
-    // You should modify this based on your target users' location
-    if (!phone.startsWith('+')) {
-      if (phone.startsWith('1')) {
-        return '+$phone';
-      } else {
-        return '+1$phone'; // Default US country code
-      }
-    }
-    return phone;
-  }
-  
-  // Phone verification functions
-  Future<void> _verifyPhoneNumber() async {
-    if (_phoneController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a valid phone number')),
-      );
-      return;
-    }
-    
-    setState(() {
-      _isLoading = true;
-    });
-    
-    final formattedPhone = _formatPhoneNumber(_phoneController.text.trim());
-    
-    try {
-      await _auth.verifyPhoneNumber(
-        phoneNumber: formattedPhone,
-        verificationCompleted: (PhoneAuthCredential credential) async {
-          // Auto-verification (Android only)
-          try {
-            if (_auth.currentUser != null) {
-              await _auth.currentUser?.linkWithCredential(credential);
-            }
-            setState(() {
-              _isPhoneVerified = true;
-            });
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Phone verified automatically!')),
-            );
-          } catch (e) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Auto-verification error: ${e.toString()}')),
-            );
-          }
-        },
-        verificationFailed: (FirebaseAuthException e) {
-          setState(() {
-            _isLoading = false;
-          });
-          
-          String errorMessage = 'Verification failed';
-          
-          if (e.code == 'invalid-phone-number') {
-            errorMessage = 'Invalid phone number format. Please include country code (e.g., +1 for US).';
-          } else if (e.code == 'too-many-requests') {
-            errorMessage = 'Too many requests. Please try again later.';
-          } else if (e.code == 'quota-exceeded') {
-            errorMessage = 'SMS quota exceeded. Please try again tomorrow.';
-          } else {
-            errorMessage = 'Error: ${e.message}';
-          }
-          
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(errorMessage)),
-          );
-        },
-        codeSent: (String verificationId, int? resendToken) {
-          setState(() {
-            _verificationId = verificationId;
-            _resendToken = resendToken;
-            _isLoading = false;
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Verification code sent!')),
-          );
-          _showOTPInputDialog();
-        },
-        codeAutoRetrievalTimeout: (String verificationId) {
-          setState(() {
-            _verificationId = verificationId;
-            _isLoading = false;
-          });
-        },
-        timeout: const Duration(seconds: 60),
-        forceResendingToken: _resendToken,
-      );
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Phone verification error: ${e.toString()}')),
-      );
-    }
-  }
-  
-  Future<void> _showOTPInputDialog() async {
-    _otpController.clear();
-    
+  // Show email verification dialog
+  Future<void> _showEmailVerificationDialog() async {
     return showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) {
-          bool isVerifying = false;
-          
-          return AlertDialog(
-            title: const Text('Enter Verification Code'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
+      builder: (context) => AlertDialog(
+        title: const Text('Verify Your Email'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'A verification email has been sent to your email address. Please check your inbox and click the verification link.',
+              style: TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+             'After verifying, return to this screen and click "I\'ve Verified" button below.',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text(
-                  'Enter the 6-digit code sent to your phone',
-                  style: TextStyle(fontSize: 14),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: _otpController,
-                  keyboardType: TextInputType.number,
-                  maxLength: 6,
-                  decoration: InputDecoration(
-                    hintText: '123456',
-                    counterText: '',
-                    filled: true,
-                    fillColor: Colors.grey.shade100,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  ),
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    letterSpacing: 8,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text("Didn't receive code? "),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                        _verifyPhoneNumber();
-                      },
-                      child: const Text('Resend'),
-                    ),
-                  ],
+                const Text("Didn't receive email? "),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    // Resend verification email
+                    _auth.currentUser?.sendEmailVerification();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Verification email resent!')),
+                    );
+                    _showEmailVerificationDialog();
+                  },
+                  child: const Text('Resend'),
                 ),
               ],
             ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: const Text('Cancel'),
-              ),
-              ElevatedButton(
-                onPressed: isVerifying ? null : () async {
-                  if (_otpController.text.length != 6) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Please enter a valid 6-digit code')),
-                    );
-                    return;
-                  }
-                  
-                  try {
-                    setDialogState(() {
-                      isVerifying = true;
-                    });
-                    
-                    PhoneAuthCredential credential = PhoneAuthProvider.credential(
-                      verificationId: _verificationId!,
-                      smsCode: _otpController.text.trim(),
-                    );
-                    
-                    // Link phone credential with user account if user exists
-                    if (_auth.currentUser != null) {
-                      try {
-                        await _auth.currentUser?.linkWithCredential(credential);
-                      } on FirebaseAuthException catch (e) {
-                        if (e.code == 'provider-already-linked') {
-                          // Phone may already be linked, which is fine
-                        } else {
-                          throw e;
-                        }
-                      }
-                    }
-                    
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (_auth.currentUser != null) {
+                try {
+                  await _auth.currentUser!.reload();
+                  if (_auth.currentUser!.emailVerified) {
                     setState(() {
-                      _isPhoneVerified = true;
+                      _isEmailVerified = true;
                     });
-                    
                     Navigator.of(context).pop();
-                    
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Phone verified successfully!')),
+                      const SnackBar(content: Text('Email verified successfully!')),
                     );
-                  } on FirebaseAuthException catch (e) {
-                    setDialogState(() {
-                      isVerifying = false;
-                    });
-                    
-                    String errorMessage = 'Verification failed';
-                    
-                    if (e.code == 'invalid-verification-code') {
-                      errorMessage = 'Invalid verification code. Please try again.';
-                    } else if (e.code == 'session-expired') {
-                      errorMessage = 'Verification session expired. Please request a new code.';
-                      Navigator.of(context).pop();
-                      _verifyPhoneNumber();
-                      return;
-                    } else {
-                      errorMessage = 'Error: ${e.message}';
-                    }
-                    
+                  } else {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(errorMessage)),
-                    );
-                  } catch (e) {
-                    setDialogState(() {
-                      isVerifying = false;
-                    });
-                    
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Failed to verify: ${e.toString()}')),
+                      const SnackBar(content: Text('Email not verified yet. Please check your inbox and click the verification link.')),
                     );
                   }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue.shade800,
-                  foregroundColor: Colors.white,
-                ),
-                child: isVerifying 
-                    ? const SizedBox(
-                        width: 20, 
-                        height: 20, 
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2, 
-                          color: Colors.white
-                        )
-                      )
-                    : const Text('Verify'),
-              ),
-            ],
-          );
-        }
+                } catch (e) {
+                  debugPrint('Error checking verification: $e');
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error: ${e.toString()}')),
+                  );
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue.shade800,
+              foregroundColor: Colors.white,
+            ),
+           child: const Text('I\'ve Verified'),
+          ),
+        ],
       ),
     );
   }
@@ -380,32 +343,23 @@ class _SignUpPageState extends State<SignUpPage> {
                   labelText: 'Full Name',
                 ),
                 const SizedBox(height: 10),
-                // Email Field
-                _buildTextField(
-                  controller: _emailController,
-                  hintText: 'username@gmail.com',
-                  labelText: 'Email',
-                ),
-                const SizedBox(height: 10),
-                // Phone Number Field with Verify Button
+                // Email Field with Verify Button
                 Row(
                   children: [
                     Expanded(
                       child: _buildTextField(
-                        controller: _phoneController,
-                        hintText: '+1234567890',
-                        labelText: 'Phone Number',
-                        keyboardType: TextInputType.phone,
-                        enabled: !_isPhoneVerified,
-                        helperText: 'Include country code (e.g., +1)',
+                        controller: _emailController,
+                        hintText: 'username@gmail.com',
+                        labelText: 'Email',
+                        enabled: !_isEmailVerified,
                       ),
                     ),
                     const SizedBox(width: 8),
                     ElevatedButton(
-                      onPressed: _isLoading || _isPhoneVerified ? null : _verifyPhoneNumber,
+                      onPressed: _isLoading || _isEmailVerified ? null : _verifyEmail,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: _isPhoneVerified ? Colors.green : Colors.white,
-                        foregroundColor: _isPhoneVerified ? Colors.white : Colors.blue.shade800,
+                        backgroundColor: _isEmailVerified ? Colors.green : Colors.white,
+                        foregroundColor: _isEmailVerified ? Colors.white : Colors.blue.shade800,
                         elevation: 0,
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
                       ),
@@ -415,9 +369,34 @@ class _SignUpPageState extends State<SignUpPage> {
                               height: 20,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : Text(_isPhoneVerified ? 'Verified ✓' : 'Verify Phone'),
+                          : Text(_isEmailVerified ? 'Verified ✓' : 'Verify Email'),
                     ),
                   ],
+                ),
+                if (_isEmailSent && !_isEmailVerified)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8.0),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.info_outline, size: 16, color: Colors.white70),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            'Verification email sent! Check your inbox and click the link, then click "Verify Email" again',
+                            style: TextStyle(color: Colors.white70, fontSize: 12),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                const SizedBox(height: 10),
+                // Phone Number Field (no verification)
+                _buildTextField(
+                  controller: _phoneController,
+                  hintText: '+92XXXXXXXXXX',
+                  labelText: 'Phone Number',
+                  keyboardType: TextInputType.phone,
+                  helperText: 'Include country code (e.g., +92)',
                 ),
                 const SizedBox(height: 10),
                 // Password Field
@@ -426,6 +405,7 @@ class _SignUpPageState extends State<SignUpPage> {
                   hintText: 'Password',
                   labelText: 'Password',
                   obscureText: true,
+                  enabled: !_isEmailVerified,
                 ),
                 const SizedBox(height: 10),
                 // Confirm Password Field
@@ -434,6 +414,7 @@ class _SignUpPageState extends State<SignUpPage> {
                   hintText: 'Re-type your password',
                   labelText: 'Confirm Password',
                   obscureText: true,
+                  enabled: !_isEmailVerified,
                 ),
                 const SizedBox(height: 20),
                 // Sign Up Button
@@ -500,7 +481,7 @@ class _SignUpPageState extends State<SignUpPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Text(
-                      'Already have an account yet?',
+                      'Already have an account?',
                       style: TextStyle(color: Colors.white),
                     ),
                     TextButton(
