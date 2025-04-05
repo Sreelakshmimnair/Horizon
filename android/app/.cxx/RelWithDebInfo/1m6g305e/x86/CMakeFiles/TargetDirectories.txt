@@ -1,2 +1,0 @@
-D:/project/horizon/android/app/.cxx/RelWithDebInfo/1m6g305e/x86/CMakeFiles/edit_cache.dir
-D:/project/horizon/android/app/.cxx/RelWithDebInfo/1m6g305e/x86/CMakeFiles/rebuild_cache.dir

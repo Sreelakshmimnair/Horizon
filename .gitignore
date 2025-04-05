@@ -1,0 +1,33 @@
+# Flutter/Dart specific
+.dart_tool/
+.packages
+.pub/
+build/
+.idea/
+android/.gradle/
+android/app/.cxx/
+ios/Flutter/Flutter.framework/
+ios/Flutter/Flutter.podspec
+ios/.symlinks/
+ios/Pods/
+macos/Flutter/Flutter.framework/
+macos/Flutter/Flutter.podspec
+macos/.symlinks/
+macos/Pods/
+linux/flutter/ephemeral/
+windows/flutter/ephemeral/
+web/.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.dart_tool/package_config.json
+.flutter-plugins
+.flutter-plugins-dependencies
+*.iml
+
+# Others
+*.apk
+*.ipa
+*.jar
+*.log
+*.tmp
+*.swp

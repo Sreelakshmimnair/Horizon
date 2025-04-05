@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'homepage.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -18,6 +20,7 @@ class _SignUpPageState extends State<SignUpPage> {
   
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
   
   bool _isLoading = false;
   bool _isEmailVerified = false;
@@ -180,29 +183,44 @@ class _SignUpPageState extends State<SignUpPage> {
       });
       
       // Ensure user is signed in
-      if (_auth.currentUser == null) {
+      User? currentUser = _auth.currentUser;
+      if (currentUser == null) {
         // If somehow the user is not signed in, sign in with the provided credentials
-        await _auth.signInWithEmailAndPassword(
+        UserCredential userCred = await _auth.signInWithEmailAndPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text,
         );
+        currentUser = userCred.user;
+      }
+      
+      // Make sure we have a valid user before proceeding
+      if (currentUser == null) {
+        throw Exception("Failed to authenticate user");
       }
       
       // Store additional user info in Firestore
-      await _firestore.collection('users').doc(_auth.currentUser!.uid).set({
-        'fullName': _fullNameController.text,
-        'email': _emailController.text,
-        'phoneNumber': _phoneController.text,
-        'emailVerified': _isEmailVerified,
-        'createdAt': Timestamp.now(),
-      });
+      try {
+        await _firestore.collection('users').doc(currentUser.uid).set({
+          'fullName': _fullNameController.text,
+          'email': _emailController.text,
+          'phoneNumber': _phoneController.text,
+          'emailVerified': true,
+          'createdAt': FieldValue.serverTimestamp(), // Use server timestamp instead
+          'authProvider': 'email',
+        });
+      } catch (firestoreError) {
+        debugPrint('Firestore error: $firestoreError');
+        throw Exception("Permission denied: Make sure your Firebase rules allow writing to the users collection");
+      }
       
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Registration successful!')),
       );
       
-      // Navigate to home screen or login screen
-      Navigator.pushReplacementNamed(context, '/home'); // Change this to your route
+      // Navigate to home screen
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => HomePage()),
+      );
       
     } on FirebaseAuthException catch (e) {
       debugPrint('Firebase Auth Error: ${e.code} - ${e.message}');
@@ -452,26 +470,52 @@ class _SignUpPageState extends State<SignUpPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     GestureDetector(
-                      onTap: () {
-                        // Handle Google Sign-In
-                        _signInWithGoogle();
-                      },
-                      child: Image.asset(
-                        'assets/images/google.png',
-                        height: 40,
-                        width: 40,
+                      onTap: _isLoading ? null : _signInWithGoogle,
+                      child: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(50),
+                        ),
+                        child: _isLoading
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  color: Colors.blue,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : Image.asset(
+                                'assets/images/google.png',
+                                height: 30,
+                                width: 30,
+                              ),
                       ),
                     ),
                     const SizedBox(width: 20),
                     GestureDetector(
-                      onTap: () {
-                        // Handle Gmail Sign-In (same as Google Sign-In)
-                        _signInWithGoogle();
-                      },
-                      child: Image.asset(
-                        'assets/images/gmail.png',
-                        height: 40,
-                        width: 40,
+                      onTap: _isLoading ? null : _signInWithGoogle, // Same method for Gmail
+                      child: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(50),
+                        ),
+                        child: _isLoading
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  color: Colors.blue,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : Image.asset(
+                                'assets/images/gmail.png',
+                                height: 30,
+                                width: 30,
+                              ),
                       ),
                     ),
                   ],
@@ -506,27 +550,127 @@ class _SignUpPageState extends State<SignUpPage> {
     );
   }
   
-  // Google Sign In
+  // Google Sign In implementation
   Future<void> _signInWithGoogle() async {
+    setState(() {
+      _isLoading = true;
+    });
+
     try {
-      setState(() {
-        _isLoading = true;
-      });
+      // Begin interactive sign in process
+      final GoogleSignInAccount? gUser = await _googleSignIn.signIn();
       
-      // Here you would implement Google Sign-In
-      // This is a placeholder for now as it requires GoogleSignIn package
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Google Sign-In would be implemented here')),
+      // If the user cancels the sign-in flow, return early
+      if (gUser == null) {
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+
+      // Obtain auth details from request
+      final GoogleSignInAuthentication gAuth = await gUser.authentication;
+
+      // Create a new credential for the user
+      final credential = GoogleAuthProvider.credential(
+        accessToken: gAuth.accessToken,
+        idToken: gAuth.idToken,
       );
+
+      // Check if the email already exists
+      final isNewUser = await _checkIfNewUser(gUser.email);
+
+      // Sign in with credential
+      final UserCredential userCredential = await _auth.signInWithCredential(credential);
       
+      // If this is a new user, store their information in Firestore
+      if (isNewUser) {
+        try {
+          await _storeGoogleUserInFirestore(userCredential.user!, gUser);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Account created successfully!')),
+          );
+        } catch (firestoreError) {
+          debugPrint('Firestore error: $firestoreError');
+          // Continue despite Firestore error - user is still authenticated
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Logged in successfully, but profile data could not be saved.')),
+          );
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Logged in successfully!')),
+        );
+      }
+
+      // Navigate to home screen regardless of Firestore success
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => HomePage()),
+      );
+    } on FirebaseAuthException catch (e) {
+      String errorMessage = 'Google Sign-In failed. Please try again.';
+      
+      if (e.code == 'account-exists-with-different-credential') {
+        errorMessage = 'An account already exists with the same email address.';
+      } else if (e.code == 'invalid-credential') {
+        errorMessage = 'The Google credential is invalid or has expired.';
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage)),
+      );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
+        SnackBar(content: Text('Error: ${e.toString()}')),
       );
     } finally {
       setState(() {
         _isLoading = false;
       });
+    }
+  }
+
+  // Check if the user is new
+  Future<bool> _checkIfNewUser(String email) async {
+    try {
+      // First, check if the email exists as a Firebase Auth user
+      List<String> methods = await _auth.fetchSignInMethodsForEmail(email);
+      if (methods.isNotEmpty && !methods.contains('google.com')) {
+        // Email exists but not with Google auth
+        throw FirebaseAuthException(
+          code: 'account-exists-with-different-credential',
+          message: 'An account already exists with the same email address but different sign-in method.'
+        );
+      }
+      
+      if (methods.contains('google.com')) {
+        // User already exists with Google sign-in
+        return false;
+      }
+      
+      // Don't check Firestore - rely solely on Auth methods
+      return true;
+    } catch (e) {
+      debugPrint('Error checking if user is new: $e');
+      rethrow;
+    }
+  }
+
+  // Store Google user info in Firestore
+  Future<void> _storeGoogleUserInFirestore(User user, GoogleSignInAccount googleUser) async {
+    try {
+      await _firestore.collection('users').doc(user.uid).set({
+        'fullName': googleUser.displayName ?? '',
+        'email': googleUser.email,
+        'phoneNumber': user.phoneNumber ?? '',
+        'emailVerified': user.emailVerified,
+        'createdAt': FieldValue.serverTimestamp(), // Use server timestamp
+        'authProvider': 'google',
+        'photoURL': googleUser.photoUrl ?? '',
+      });
+    } catch (e) {
+      debugPrint('Error storing Google user: $e');
+      rethrow;
     }
   }
 

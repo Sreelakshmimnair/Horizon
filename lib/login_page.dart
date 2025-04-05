@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'signup_page.dart';
 import 'homepage.dart';
 
@@ -16,6 +17,7 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
 
   @override
   void dispose() {
@@ -76,12 +78,65 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  // Google Sign In method (placeholder - implement fully later)
+  // Google Sign In implementation
   Future<void> _signInWithGoogle() async {
-    // Implementation would go here
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Google Sign-In not implemented yet')),
-    );
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // Trigger the Google Sign-In flow
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      
+      // If the user canceled the sign-in flow, return early
+      if (googleUser == null) {
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+
+      // Obtain the auth details from the request
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+
+      // Create a new credential
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      // Sign in to Firebase with the Google credential
+      final UserCredential userCredential = await _auth.signInWithCredential(credential);
+
+      // If successful, navigate to home page
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => HomePage()),
+      );
+    } on FirebaseAuthException catch (e) {
+      String errorMessage = 'Google Sign-In failed. Please try again.';
+      
+      if (e.code == 'account-exists-with-different-credential') {
+        errorMessage = 'An account already exists with the same email address.';
+      } else if (e.code == 'invalid-credential') {
+        errorMessage = 'The Google credential is invalid or has expired.';
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage)),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Google Sign-In error: ${e.toString()}')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   // Reset password method
@@ -252,18 +307,27 @@ class _LoginPageState extends State<LoginPage> {
                   const SizedBox(height: 20),
                   // Social login button (Google)
                   GestureDetector(
-                    onTap: _signInWithGoogle,
+                    onTap: _isLoading ? null : _signInWithGoogle,
                     child: Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(50),
                       ),
-                      child: Image.asset(
-                        'assets/images/google.png',
-                        height: 30,
-                        width: 30,
-                      ),
+                      child: _isLoading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.blue,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : Image.asset(
+                              'assets/images/google.png',
+                              height: 30,
+                              width: 30,
+                            ),
                     ),
                   ),
                   const SizedBox(height: 30),
