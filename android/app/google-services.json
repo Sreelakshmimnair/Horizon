@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "353924248823",
+    "firebase_url": "https://horizon-test-d997a-default-rtdb.firebaseio.com",
     "project_id": "horizon-test-d997a",
     "storage_bucket": "horizon-test-d997a.firebasestorage.app"
   },
@@ -19,6 +20,14 @@
           "android_info": {
             "package_name": "com.example.horizon",
             "certificate_hash": "8d7573a610f291d52a356fca4173a8241b520887"
+          }
+        },
+        {
+          "client_id": "353924248823-dbkb0ntbevkgvqavurj7f9s8sprpjtrj.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.horizon",
+            "certificate_hash": "42b79eaeb50d5089175a29db643f5e37640826df"
           }
         },
         {

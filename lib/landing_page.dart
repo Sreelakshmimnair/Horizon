@@ -9,6 +9,8 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -19,6 +21,8 @@ class MyApp extends StatelessWidget {
 }
 
 class CollegePredictorPage extends StatefulWidget {
+  const CollegePredictorPage({super.key});
+
   @override
   _CollegePredictorPageState createState() => _CollegePredictorPageState();
 }
@@ -27,7 +31,7 @@ class _CollegePredictorPageState extends State<CollegePredictorPage> {
   String? selectedCountry;
   String? selectedStream;
   String? selectedCourse;
-  String? selectedDuration;
+  String? selectedFeeRange;
   String higherStudies = "Yes";
   String internshipAvailable = "Yes";
   String partTimeJob = "Yes";
@@ -35,12 +39,22 @@ class _CollegePredictorPageState extends State<CollegePredictorPage> {
   String predictionResult = "";
   bool isLoading = false;
   final TextEditingController percentageController = TextEditingController();
-  final TextEditingController feesController = TextEditingController();
   
   // Sliders values for language tests
   double ieltsScore = 6.0;
   double toeflScore = 80.0;
   double pteScore = 50.0;
+
+  // Fee ranges
+  final List<String> feeRanges = [
+    "0-20L",
+    "20-40L",
+    "40-60L",
+    "60-80L",
+  ];
+
+  // Yes/No options
+  final List<String> yesNoOptions = ["Yes", "No"];
 
   // Streams available for selection
   final List<String> streams = [
@@ -134,7 +148,6 @@ class _CollegePredictorPageState extends State<CollegePredictorPage> {
       "BN Nursing Studies",
       "BNurs in Nursing (Adult)",
       "BNurs in Nursing (Mental Health)",
-
     ],
     "Science": [
       "Jewellery & Metal Design BDes",
@@ -213,142 +226,120 @@ class _CollegePredictorPageState extends State<CollegePredictorPage> {
     {"name": "Canada", "flag": "assets/images/canada.png"},
     {"name": "UK", "flag": "assets/images/uk.jpg"},
   ];
-  double parseFees(String fees) {
-  try {
-    // Remove spaces and convert lowercase
-    fees = fees.trim().toLowerCase();
-
-    // Check if the value is a range (e.g., "15k-30k")
-    if (fees.contains('-')) {
-      List<String> parts = fees.split('-');
-      if (parts.length == 2) {
-        double start = parseFees(parts[0]);
-        double end = parseFees(parts[1]);
-        return (start + end) / 2; // Take the average of the range
-      }
+  
+  double parseFeeRange(String feeRange) {
+    // Parse the fee range and return a representative value
+    switch (feeRange) {
+      case "0-20L":
+        return 1000000; // 10L as midpoint
+      case "20-40L":
+        return 3000000; // 30L as midpoint
+      case "40-60L":
+        return 5000000; // 50L as midpoint
+      case "60-80L":
+        return 7000000; // 70L as midpoint
+      default:
+        return 0.0;
     }
-
-    // Convert "15k" to 15000
-    if (fees.endsWith('k')) {
-      return double.parse(fees.replaceAll('k', '')) * 1000;
-    }
-
-    // Convert regular numbers
-    return double.parse(fees);
-  } catch (e) {
-    print("Invalid fee format: $fees");
-    return 0.0; // Default to 0.0 if parsing fails
   }
-}
-// 
-Future<void> predictCollege() async {
-  setState(() {
-    isLoading = true;
-  });
-// ghjkl
-  try {
-    final url = Uri.parse("https://flask-8v3h.onrender.com/predict");
-    final response = await http.post(
-      url,
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode({
-        "Country": selectedCountry,
-        "Course": selectedCourse,
-        "IELTS": ieltsScore,
-        "Plustwo": double.tryParse(percentageController.text.trim()) ?? 0.0,
-        "TOEFL": toeflScore,
-        "PTE": pteScore,
-        "Fees": parseFees(feesController.text.trim()),
-        "Duration": selectedDuration,
-        "Internship": internshipAvailable,
-        "Partime": partTimeJob,
-        "Stayback": stayBack,
-        "HigherStudies": higherStudies,
-      }),
-    );
 
-    if (response.statusCode == 200) {
-      final result = jsonDecode(response.body);
-      List<Map<String, dynamic>> colleges = [];
+  Future<void> predictCollege() async {
+    setState(() {
+      isLoading = true;
+    });
 
-      if (result is List) {
-        // API returns a list of colleges
-        colleges = List<Map<String, dynamic>>.from(result);
-      } else if (result is Map<String, dynamic> && result.containsKey("college")) {
-        // API returns a single college, wrap it in a list
-        colleges = [
-          {
-            "name": result["college"],
+    try {
+      final url = Uri.parse("https://flask-8v3h.onrender.com/predict");
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "Country": selectedCountry,
+          "Course": selectedCourse,
+          "IELTS": ieltsScore,
+          "Plustwo": double.tryParse(percentageController.text.trim()) ?? 0.0,
+          "TOEFL": toeflScore,
+          "PTE": pteScore,
+          "Fees": parseFeeRange(selectedFeeRange ?? "0-20L"),
+          "Internship": internshipAvailable,
+          "Partime": partTimeJob,
+          "Stayback": stayBack,
+          "HigherStudies": higherStudies,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final result = jsonDecode(response.body);
+        List<Map<String, dynamic>> colleges = [];
+
+        if (result is List) {
+          // API returns a list of colleges
+          colleges = List<Map<String, dynamic>>.from(result);
+        } else if (result is Map<String, dynamic> && result.containsKey("college")) {
+          // API returns a single college, wrap it in a list
+          colleges = [
+            {
+              "name": result["college"],
+              "matchPercentage": "N/A",
+              "image": "https://via.placeholder.com/150",
+              "location": "N/A",
+              "tuition": "N/A",
+              "requirements": "N/A"
+            }
+          ];
+        }
+
+        // Store the number of actual colleges received
+        int collegeCount = colleges.length;
+
+        // Ensure exactly 5 colleges are displayed
+        while (colleges.length < 5) {
+          colleges.add({
+            "name": "Unknown College ${colleges.length + 1}",
             "matchPercentage": "N/A",
             "image": "https://via.placeholder.com/150",
             "location": "N/A",
             "tuition": "N/A",
             "requirements": "N/A"
-          }
-        ];
+          });
+        }
+
+        if (mounted) {
+          setState(() {
+            predictionResult = "Found $collegeCount college(s)";
+            isLoading = false;
+          });
+
+          // Navigate to the results page with processed data
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => PredictionResultPage(
+                predictionData: {
+                  "colleges": colleges,
+                  "collegeCount": collegeCount, // Pass count to next page
+                },
+              ),
+            ),
+          );
+        }
+      } else {
+        throw Exception("Server error: ${response.statusCode}");
       }
-
-      // Store the number of actual colleges received
-      int collegeCount = colleges.length;
-
-      // Ensure exactly 5 colleges are displayed
-      while (colleges.length < 5) {
-        colleges.add({
-          "name": "Unknown College ${colleges.length + 1}",
-          "matchPercentage": "N/A",
-          "image": "https://via.placeholder.com/150",
-          "location": "N/A",
-          "tuition": "N/A",
-          "requirements": "N/A"
-        });
-      }
-
+    } catch (e) {
       if (mounted) {
         setState(() {
-          predictionResult = "Found $collegeCount college(s)";
+          predictionResult = "Error: ${e.toString()}";
           isLoading = false;
         });
-
-        // Navigate to the results page with processed data
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => PredictionResultPage(
-              predictionData: {
-                "colleges": colleges,
-                "collegeCount": collegeCount, // Pass count to next page
-              },
-            ),
-          ),
-        );
       }
-    } else {
-      throw Exception("Server error: ${response.statusCode}");
-    }
-  } catch (e) {
-    if (mounted) {
-      setState(() {
-        predictionResult = "Error: ${e.toString()}";
-        isLoading = false;
-      });
     }
   }
-}
-
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("College Predictor"),
-        backgroundColor: Colors.blue.shade800,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
-      ),
+      // Removed AppBar completely
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -357,135 +348,353 @@ Future<void> predictCollege() async {
             end: Alignment.bottomCenter,
           ),
         ),
-        child: Center(
-          child: SingleChildScrollView(
-            padding: EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Text(
-                    "College Predictor",
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-                SizedBox(height: 20),
-                _buildLabel("Select Country"),
-                _buildCountryDropdown(),
-                
-                _buildLabel("Select Stream"),
-                _buildStreamDropdown(),
-                
-                _buildLabel("Select Course"),
-                _buildCourseDropdown(),
-                
-                _buildTextField("+2 Percentage", percentageController, keyboardType: TextInputType.number),
-
-                // Language score sliders
-                _buildLabel("IELTS Score: ${ieltsScore.toStringAsFixed(1)}"),
-                _buildSlider(
-                  value: ieltsScore,
-                  min: 1.0,
-                  max: 9.0,
-                  divisions: 16,
-                  onChanged: (value) {
-                    setState(() {
-                      ieltsScore = value;
-                    });
-                  },
-                ),
-
-                _buildLabel("TOEFL Score: ${toeflScore.toStringAsFixed(0)}"),
-                _buildSlider(
-                  value: toeflScore,
-                  min: 0.0,
-                  max: 120.0,
-                  divisions: 120,
-                  onChanged: (value) {
-                    setState(() {
-                      toeflScore = value;
-                    });
-                  },
-                ),
-
-                _buildLabel("PTE Score: ${pteScore.toStringAsFixed(0)}"),
-                _buildSlider(
-                  value: pteScore,
-                  min: 0.0,
-                  max: 90.0,
-                  divisions: 80,
-                  onChanged: (value) {
-                    setState(() {
-                      pteScore = value;
-                    });
-                  },
-                ),
-                _buildLabel("Enter the fee range (e.g., 15k-20k) *"),
-                _buildTextField("15k-20k", feesController),
-                _buildLabel("Select Duration (Years)"),
-                _buildDurationDropdown(),
-
-
-                SizedBox(height: 20),
-                _buildLabel("Higher Studies Possible?"),
-                _buildYesNoDropdown((val) => setState(() => higherStudies = val ?? "Yes"), higherStudies),
-
-                _buildLabel("Internship Available?"),
-                _buildYesNoDropdown((val) => setState(() => internshipAvailable = val ?? "Yes"), internshipAvailable),
-
-                _buildLabel("Part-time Job?"),
-                _buildYesNoDropdown((val) => setState(() => partTimeJob = val ?? "Yes"), partTimeJob),
-
-                _buildLabel("Stay Back?"),
-                _buildYesNoDropdown((val) => setState(() => stayBack = val ?? "Yes"), stayBack),
-
-                SizedBox(height: 20),
-                Center(
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      if (selectedCountry == null || selectedStream == null || selectedCourse == null) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text("Please select country, stream and course"),
-                            backgroundColor: Colors.red,
-                          )
-                        );
-                        return;
-                      }
-                      
-                      // Show loading indicator
-                      setState(() {
-                        isLoading = true;
-                      });
-                      
-                      // Simulate API call
-                      await Future.delayed(Duration(seconds: 1));
-                      
-                      // Navigate directly to result page without waiting for API
-                      _navigateToPredictionResult();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      elevation: 8,
-                    ),
+        child: SafeArea(  // Added SafeArea to respect system UI elements
+          child: Center(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
                     child: Text(
-                      isLoading ? "Loading..." : "Predict",
-                      style: TextStyle(fontSize: 18, color: Colors.blue.shade800, fontWeight: FontWeight.bold),
+                      "College Predictor",
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
-                ),
-                SizedBox(height: 20),
-              ],
+                  SizedBox(height: 20),
+                  _buildLabel("Select Country"),
+                  _buildCountryDropdown(),
+                  
+                  _buildLabel("Select Stream"),
+                  _buildStreamDropdown(),
+                  
+                  _buildLabel("Select Course"),
+                  _buildCourseDropdown(),
+                  
+                  _buildLabel("+2 Percentage"),
+                  _buildPercentageTextField(),
+
+                  // Language score sliders
+                  _buildLabel("IELTS Score: ${ieltsScore.toStringAsFixed(1)}"),
+                  _buildSlider(
+                    value: ieltsScore,
+                    min: 1.0,
+                    max: 9.0,
+                    divisions: 16,
+                    onChanged: (value) {
+                      setState(() {
+                        ieltsScore = value;
+                      });
+                    },
+                  ),
+
+                  _buildLabel("TOEFL Score: ${toeflScore.toStringAsFixed(0)}"),
+                  _buildSlider(
+                    value: toeflScore,
+                    min: 0.0,
+                    max: 120.0,
+                    divisions: 120,
+                    onChanged: (value) {
+                      setState(() {
+                        toeflScore = value;
+                      });
+                    },
+                  ),
+
+                  _buildLabel("PTE Score: ${pteScore.toStringAsFixed(0)}"),
+                  _buildSlider(
+                    value: pteScore,
+                    min: 0.0,
+                    max: 90.0,
+                    divisions: 90,
+                    onChanged: (value) {
+                      setState(() {
+                        pteScore = value;
+                      });
+                    },
+                  ),
+                  
+                  _buildLabel("Select Fee Range"),
+                  _buildFeeRangeDropdown(),
+
+                  SizedBox(height: 15),
+                  
+                  // Attractive and compact dropdowns for Yes/No options
+                  _buildLabel("Additional Options"),
+                  _buildAttractiveOptionsGrid(),
+
+                  SizedBox(height: 20),
+                  Center(
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        if (selectedCountry == null || selectedStream == null || selectedCourse == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text("Please select country, stream and course"),
+                              backgroundColor: Colors.red,
+                            )
+                          );
+                          return;
+                        }
+                        
+                        // Validate percentage
+                        String percentage = percentageController.text.trim();
+                        if (percentage.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text("Please enter +2 percentage"),
+                              backgroundColor: Colors.red,
+                            )
+                          );
+                          return;
+                        }
+                        
+                        double? percentageValue = double.tryParse(percentage);
+                        if (percentageValue == null || percentageValue > 100) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text("Please enter a valid percentage (maximum 100)"),
+                              backgroundColor: Colors.red,
+                            )
+                          );
+                          return;
+                        }
+                        
+                        // Show loading indicator
+                        setState(() {
+                          isLoading = true;
+                        });
+                        
+                        // Simulate API call
+                        await Future.delayed(Duration(seconds: 1));
+                        
+                        // Navigate directly to result page without waiting for API
+                        _navigateToPredictionResult();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        elevation: 8,
+                      ),
+                      child: Text(
+                        isLoading ? "Loading..." : "Predict",
+                        style: TextStyle(fontSize: 18, color: Colors.blue.shade800, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                ],
+              ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  // New attractive options grid with card-like UI
+  Widget _buildAttractiveOptionsGrid() {
+    return Container(
+      padding: EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.blue.shade800.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: _buildAttractiveYesNoOption(
+                  title: "Higher Studies",
+                  icon: Icons.school,
+                  value: higherStudies,
+                  onChanged: (value) => setState(() => higherStudies = value!),
+                ),
+              ),
+              SizedBox(width: 12),
+              Expanded(
+                child: _buildAttractiveYesNoOption(
+                  title: "Internship",
+                  icon: Icons.business_center,
+                  value: internshipAvailable,
+                  onChanged: (value) => setState(() => internshipAvailable = value!),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildAttractiveYesNoOption(
+                  title: "Part-time Job",
+                  icon: Icons.work,
+                  value: partTimeJob,
+                  onChanged: (value) => setState(() => partTimeJob = value!),
+                ),
+              ),
+              SizedBox(width: 12),
+              Expanded(
+                child: _buildAttractiveYesNoOption(
+                  title: "Stay Back",
+                  icon: Icons.home,
+                  value: stayBack,
+                  onChanged: (value) => setState(() => stayBack = value!),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Attractive card-like Yes/No option with icon
+  Widget _buildAttractiveYesNoOption({
+    required String title,
+    required IconData icon,
+    required String value,
+    required void Function(String?) onChanged,
+  }) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Colors.blue.shade700,
+            Colors.blue.shade600,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 4,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                icon,
+                color: Colors.white,
+                size: 20,
+              ),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 8),
+          Container(
+            height: 34,
+            width: double.infinity,
+            padding: EdgeInsets.symmetric(horizontal: 8),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.3),
+                width: 1,
+              ),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: value,
+                isDense: true,
+                icon: Icon(
+                  Icons.arrow_drop_down_circle,
+                  color: Colors.white,
+                  size: 18,
+                ),
+                dropdownColor: Colors.blue.shade700,
+                items: yesNoOptions.map((option) {
+                  return DropdownMenuItem<String>(
+                    value: option,
+                    child: Text(
+                      option,
+                      style: TextStyle(
+                        color: option == value ? Colors.white : Colors.white.withOpacity(0.8),
+                        fontWeight: option == value ? FontWeight.bold : FontWeight.normal,
+                        fontSize: 14,
+                      ),
+                    ),
+                  );
+                }).toList(),
+                onChanged: onChanged,
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPercentageTextField() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 15),
+      child: AnimatedContainer(
+        duration: Duration(milliseconds: 300),
+        padding: EdgeInsets.symmetric(horizontal: 15),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: TextField(
+          controller: percentageController,
+          keyboardType: TextInputType.number,
+          style: TextStyle(color: Colors.white),
+          decoration: InputDecoration(
+            hintText: "Enter percentage (0-100)",
+            hintStyle: TextStyle(color: Colors.white70),
+            border: InputBorder.none,
+          ),
+          onChanged: (value) {
+            // Validate input on change
+            if (value.isNotEmpty) {
+              double? percentageValue = double.tryParse(value);
+              if (percentageValue != null && percentageValue > 100) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text("Percentage cannot exceed 100"),
+                    backgroundColor: Colors.red,
+                    duration: Duration(seconds: 2),
+                  )
+                );
+              }
+            }
+          },
         ),
       ),
     );
@@ -632,26 +841,32 @@ Future<void> predictCollege() async {
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller, {TextInputType keyboardType = TextInputType.text}) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 15),
-      child: AnimatedContainer(
-        duration: Duration(milliseconds: 300),
-        padding: EdgeInsets.symmetric(horizontal: 15),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.2),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: TextField(
-          controller: controller,
-          keyboardType: keyboardType,
-          style: TextStyle(color: Colors.white),
-          decoration: InputDecoration(
-            labelText: label,
-            labelStyle: TextStyle(color: Colors.white),
-            border: InputBorder.none,
-          ),
-        ),
+  Widget _buildFeeRangeDropdown() {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 15),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: DropdownButtonFormField<String>(
+        dropdownColor: Colors.white,
+        value: selectedFeeRange,
+        hint: Text("Select fee range", style: TextStyle(color: Colors.white)),
+        items: feeRanges.map((range) {
+          return DropdownMenuItem<String>( 
+            value: range,
+            child: Text(
+              range,
+              style: TextStyle(color: Colors.black),
+            ),
+          );
+        }).toList(),
+        onChanged: (String? newValue) {
+          setState(() {
+            selectedFeeRange = newValue;
+          });
+        },
+        decoration: InputDecoration(border: InputBorder.none),
       ),
     );
   }
@@ -665,103 +880,50 @@ Future<void> predictCollege() async {
       ),
     );
   }
-  Widget _buildDurationDropdown() {
-  return Container(
-    padding: EdgeInsets.symmetric(horizontal: 15),
-    decoration: BoxDecoration(
-      color: Colors.white.withOpacity(0.2),
-      borderRadius: BorderRadius.circular(10),
-    ),
-    child: DropdownButtonFormField<String>(
-      dropdownColor: Colors.white,
-      value: selectedDuration,
-      hint: Text("Choose duration", style: TextStyle(color: Colors.white)),
-      items: ["1", "2", "3", "4"].map((duration) {
-        return DropdownMenuItem<String>(
-          value: duration,
-          child: Text(
-            "$duration Years",
-            style: TextStyle(color: Colors.black),
-          ),
-        );
-      }).toList(),
-      onChanged: (String? newValue) {
-        setState(() {
-          selectedDuration = newValue;
-        });
-      },
-      decoration: InputDecoration(border: InputBorder.none),
-    ),
-  );
-}
 
-  Widget _buildYesNoDropdown(ValueChanged<String?>? onChanged, String value) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 15),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: DropdownButton<String?>(
-        value: value,
-        dropdownColor: Colors.white,
-        onChanged: onChanged,
-        items: ["Yes", "No"].map((option) {
-          return DropdownMenuItem<String?>(
-            value: option,
-            child: Text(option, style: TextStyle(color: Colors.black)),
-          );
-        }).toList(),
-        underline: SizedBox(),
-        isExpanded: true,
-      ),
-    );
-  }
-
- void _navigateToPredictionResult() async {
-  setState(() {
-    isLoading = true;
-  });
-
-  try {
-    // Format the data according to what your API expects
-    Map<String, dynamic> predictionData = {
-      "Country": selectedCountry,
-      "Course": selectedCourse,
-      "IELTS": ieltsScore,
-      "Plustwo": double.tryParse(percentageController.text.trim()) ?? 0.0,
-      "TOEFL": toeflScore,
-      "PTE": pteScore,
-      "Fees": parseFees(feesController.text.trim()),
-      "Duration": selectedDuration,
-      "Internship": internshipAvailable,
-      "Partime": partTimeJob,
-      "Stayback": stayBack,
-      "HigherStudies": higherStudies,
-    };
-    
-    // Reset loading state
+  void _navigateToPredictionResult() async {
     setState(() {
-      isLoading = false;
+      isLoading = true;
     });
-    
-    // Navigate to the prediction result page with the properly formatted data
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => PredictionResultPage(predictionData: predictionData),
-      ),
-    );
-  } catch (e) {
-    setState(() {
-      isLoading = false;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text("Error preparing prediction data: ${e.toString()}"),
-        backgroundColor: Colors.red,
-      )
-    );
+
+    try {
+      // Format the data according to what your API expects
+      Map<String, dynamic> predictionData = {
+        "Country": selectedCountry,
+        "Course": selectedCourse,
+        "IELTS": ieltsScore,
+        "Plustwo": double.tryParse(percentageController.text.trim()) ?? 0.0,
+        "TOEFL": toeflScore,
+        "PTE": pteScore,
+        "Fees": parseFeeRange(selectedFeeRange ?? "0-20L"),
+        "Internship": internshipAvailable,
+        "Partime": partTimeJob,
+        "Stayback": stayBack,
+        "HigherStudies": higherStudies,
+      };
+      
+      // Reset loading state
+      setState(() {
+        isLoading = false;
+      });
+      
+      // Navigate to the prediction result page with the properly formatted data
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => PredictionResultPage(predictionData: predictionData),
+        ),
+      );
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Error preparing prediction data: ${e.toString()}"),
+          backgroundColor: Colors.red,
+        )
+      );
+    }
   }
-}
 }
