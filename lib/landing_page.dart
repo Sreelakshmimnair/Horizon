@@ -245,7 +245,7 @@ Future<void> predictCollege() async {
   setState(() {
     isLoading = true;
   });
-
+// ghjkl
   try {
     final url = Uri.parse("https://flask-8v3h.onrender.com/predict");
     final response = await http.post(
