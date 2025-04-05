@@ -1,2 +1,0 @@
-C:/Users/sayan/OneDrive/Desktop/test - Copy/Horizon/android/app/.cxx/RelWithDebInfo/51523440/armeabi-v7a/CMakeFiles/edit_cache.dir
-C:/Users/sayan/OneDrive/Desktop/test - Copy/Horizon/android/app/.cxx/RelWithDebInfo/51523440/armeabi-v7a/CMakeFiles/rebuild_cache.dir
