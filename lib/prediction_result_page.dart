@@ -169,7 +169,7 @@ class _PredictionResultPageState extends State<PredictionResultPage> {
 
   Widget _buildCollegeCard(Map<String, dynamic> college) {
     String collegeName = college['name'] ?? 'Unknown College';
-    String location = college['location'] ?? 'N/A';
+    String confidence = (college["confidence"] as double?)?.toStringAsFixed(2) ?? 'N/A';
     String imageUrl = college['image'] ?? 'https://via.placeholder.com/150';
 
     return Card(
@@ -192,7 +192,7 @@ class _PredictionResultPageState extends State<PredictionResultPage> {
               children: [
                 Text(collegeName, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 SizedBox(height: 8),
-                Text("Location: $location", style: TextStyle(color: Colors.grey.shade600)),
+                Text("Probability: $confidence", style: TextStyle(color: Colors.grey.shade600)),
                 SizedBox(height: 8),
                 ElevatedButton(
                   onPressed: () => _showCollegeDetails(college),
