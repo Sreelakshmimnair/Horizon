@@ -380,11 +380,7 @@ World science is dominated today by a small number of languages, but it is Engli
     final passage = _readingPassages[currentQuestion['section']];
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('IELTS Reading Practice'),
-        backgroundColor: Color(0xFF1A237E),
-        elevation: 0,
-      ),
+      
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
