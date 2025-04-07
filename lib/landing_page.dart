@@ -3,6 +3,7 @@ import 'homepage.dart';
 import 'prediction_result_page.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 void main() {
   runApp(MyApp());
@@ -57,176 +58,19 @@ class _CollegePredictorPageState extends State<CollegePredictorPage> {
   final List<String> yesNoOptions = ["Yes", "No"];
 
   // Streams available for selection
-  final List<String> streams = [
-    "Arts",
-    "Commerce",
-    "Engineering",
-    "Medical",
-    "Nursing",
-    "Science",
-    "Law",
-    "Aviation"
-  ];
+  List<String> streams = [];
 
   // Courses categorized by streams
-  final Map<String, List<String>> coursesByStream = {
-    "Arts": [
-      "Honours Bachelor of Social Work",
-      "Hospitality and Tourism Management BA",
-      "International Business BA",
-      "International Business Management BA (Hons)",
-      "Marketing BA",
-      "Philosophy and Economics BA",
-      "Politics and International Relations BA",
-      "Social Work BA (Hons)",
-      "Sociology BA",
-      "Statistics (BA)",
-      "Tourism Management with Language, BA (Hons)",
-      "UG Diploma in Journalism Communications",
-      "Undergraduate Diploma in Digital Visual Effects",
-      "Advanced Diploma in Graphic Design"
-    ],
-    "Commerce": [
-      "International Business (BComm)",
-      "Marketing (BComm)",
-      "International Business Management BA (Hons)",
-      "International Business with Marketing BSc",
-      "International Management BSc (Hons)",
-      "Marketing and Management BSc",
-      "Marketing, BSc (Hons)",
-      "Marketing, Business - Diploma"
-    ],
-    "Engineering": [
-      "Mechanical Engineering (BEng)",
-      "Mechanical Engineering BEng (Hons)",
-      "Nuclear Engineering BEng (Hons)",
-      "Mechatronics Engineering BEng",
-      "Robotics BEng",
-      "Robotics Engineering - BEng",
-      "Software Engineering BEng",
-      "Software Engineering BEng (Hons)",
-      "Mechanical Engineering (B. Sc.)",
-      "B.Sc. in Electrical Engineering and Information Systems Technology",
-      "Bachelor of Science in Computer Science and Software Engineering",
-      "Software Engineering BSc (Hons)",
-      "Integrated Degree program in Architecture",
-      "Integrated Degree program in Mechanical Engineering",
-      "Mechanical Engineering Technology Advanced Diploma",
-      "Mechanical Engineering Technology- Diploma",
-      "Robotics and Artificial Intelligence Meng"
-    ],
-    "Medical": [
-      "Medicine BM5 (BMBS)",
-      "MBBS Medicine & Surgery",
-      "Paramedic Science BSc",
-      "Paramedic Science BSc (Hons)",
-      "Pharmaceutical Sciences BSc",
-      "Pharmaceutical and Chemical Sciences BSc (Hons)",
-      "Pharmaceutical science BSc(Hons)",
-      "Pharmaceutical and cosmetic science BSc",
-      "Pharmacology BSc",
-      "Pharmacology BSc/MSci",
-      "Physiotherapy BSc",
-      "MB, BChir Medicine",
-      "MBBCH in Medicine",
-      "MBBS Medicine",
-      "MBBS/BSc Medicine",
-      "MBChB",
-      "MBChB Medicine",
-      "Medicine and Surgery MBChB",
-      "VetMB Veterinary Medicine"
-    ],
-    "Nursing": [
-      "Practical Nursing - Diploma",
-      "Adult Nursing BSc",
-      "Adult Nursing, BN (Hons)",
-      "BSc (Hons) Adult Nursing",
-      "BSc (Hons) Nursing",
-      "BSc (Hons) Nursing (Mental Health)",
-      "BSc (Hons) Nursing Adult",
-      "BSc (Hons) Nursing Science",
-      "BN Nursing Studies",
-      "BNurs in Nursing (Adult)",
-      "BNurs in Nursing (Mental Health)",
-    ],
-    "Science": [
-      "Jewellery & Metal Design BDes",
-      "International Tourism Management BSc (Hons)",
-      "Mathematics BSc (Hons)",
-      "Microbiology BSc (Hons)",
-      "Psychology BSc (Hons)",
-      "Marine Biology, BSc (Hons)",
-      "Psychology BSc Hons",
-      "International Tourism and Hospitality Management BSc",
-      "Logistics with Supply Chain Management BSc",
-      "Marine & Freshwater Biology BSc",
-      "Mathematics and Physics BSc",
-      "Mathematics with Computer Science BSc",
-      "Mathematics with Economics BSc",
-      "Media and Communication BSc",
-      "Medical Science Bmed Sci(Hons)",
-      "Molecular Biotechnology",
-      "Neuroscience (BSc)",
-      "Physics (BSc)",
-      "Physics and Astrophysics (International Study) BSc",
-      "Psychology BSc",
-      "Psychology and Cognitive Neuroscience BSc",
-      "Psychology with Criminology BSc",
-      "Psychology with Criminology BSc(Hons)",
-      "Psychology with Education BSc",
-      "Science and Engineering for Social Change BSc",
-      "Statistics, Economics and Finance BSc",
-      "Zoology BSc",
-      "ZoologyBSc",
-      "Honours Bachelor of Science in Computer Science Degree with Computer Programming Diploma",
-      "Honours Bachelor of Technology (Construction Management)"
-    ],
-    "Law": [
-      "LLB (Hons)",
-      "LLB (Hons) Bachelor of Laws",
-      "LLB (Hons) Business Law",
-      "LLB (Hons) Law",
-      "LLB (Hons) Law (Crime and Criminal Justice)",
-      "LLB (Hons) Law and Criminal Justice",
-      "LLB (Hons) in Law With Criminology",
-      "LLB Bachelor of Laws",
-      "LLB Law",
-      "LLB Law with Business",
-      "LLB Law with Criminology",
-      "LLB(Hons) Law",
-      "LLB/LLB (Hons) Law",
-      "LLBLaw with Business Management",
-      "LLBLaw with Criminology",
-      "Law (Eng/NI) with Energy Law LLB",
-      "Law (Individual Rights)LLB (Hons)",
-      "Law (LLB)",
-      "Law LLB",
-      "Law LLB (Hons)",
-      "Law LLB Hons",
-      "Law LLB(Hons)",
-      "Law with Criminal Justice LLB",
-      "Law with Criminology -LLB (Hons)",
-      "Law with Criminology LLB (Hons)",
-      "Law with Criminology, LLB (Hons)",
-      "Law with CriminologyLLB",
-      "Law with Social Policy, LLB (Hons)",
-      "Law, LLB Hons",
-      "Law- LLB (Hons)",
-      "LawLLB"
-    ],
-    "Aviation": [
-      "Aviation Management",
-      "Aviation Technology",
-      "Commercial Pilot License"
-    ]
-  };
+  List<Map<String, dynamic>> coursesByStream = [];
 
   final List<Map<String, String>> countries = [
     {"name": "Germany", "flag": "assets/images/germany.png"},
     {"name": "Canada", "flag": "assets/images/canada.png"},
     {"name": "UK", "flag": "assets/images/uk.jpg"},
   ];
-  
+  bool isLoadingCountries=true;
+  bool isLoadingStreams=false;
+  bool isLoadingCourses=false;
   double parseFeeRange(String feeRange) {
     // Parse the fee range and return a representative value
     switch (feeRange) {
@@ -242,6 +86,102 @@ class _CollegePredictorPageState extends State<CollegePredictorPage> {
         return 0.0;
     }
   }
+@override
+  void initState() {
+    super.initState();
+    selectedCountry="UK";
+    fetchStreams(selectedCountry!);
+  }
+  Future <void> fetchStreams(String country) async{
+  setState(() {
+    isLoadingStreams=true;
+    streams=[];
+    selectedStream=null;
+    coursesByStream=[];
+  });
+  try {
+    final streamsnapshot=await FirebaseFirestore.instance.collection('countries').doc(country).collection('streams').get();
+    final List<String> streamList=streamsnapshot.docs.map((doc)=>doc.id).toList();
+    print("Fetched streams for $country: $streamList");
+    setState(() {
+      streams=streamList;
+      isLoadingStreams=false;
+    });
+  } catch (e) {
+    print("print error $e");
+    setState(() {
+      isLoadingStreams=false;
+    });
+    
+  }
+}
+Future<void> fetchCourses(String country, String stream) async {
+  setState(() {
+    isLoadingCourses = true;
+    coursesByStream = [];
+    selectedCourse = null;
+  });
+  
+  try {
+    print("Attempting to fetch courses for country: '$country', stream: '$stream'");
+    
+    final coursesRef = FirebaseFirestore.instance
+        .collection('countries')
+        .doc(country)
+        .collection('streams')
+        .doc(stream)
+        .collection('courses');
+    
+    print("Query path: ${coursesRef.path}");
+    
+    final snapshot = await coursesRef.get();
+    
+    print("Snapshot received, documents count: ${snapshot.docs.length}");
+    
+    if (snapshot.docs.isEmpty) {
+      print("No course documents found in collection");
+      setState(() {
+        coursesByStream = [];
+        isLoadingCourses = false;
+      });
+      return;
+    }
+    
+    // Print the first document for debugging
+    if (snapshot.docs.isNotEmpty) {
+      print("First document ID: ${snapshot.docs.first.id}");
+      print("First document data: ${snapshot.docs.first.data()}");
+    }
+    
+    final List<Map<String, dynamic>> courseList = [];
+      
+      // Process each document
+      for (var doc in snapshot.docs) {
+        final Map<String, dynamic> courseData = {
+          'id': doc.id,
+          ...doc.data(),
+        };
+        
+        // Debug each document
+        print("Processing course: ${courseData['id']} - Fields: ${courseData.keys.join(', ')}");
+        
+        courseList.add(courseData);
+      }
+      
+      print("Processed ${courseList.length} courses");
+      
+      setState(() {
+        coursesByStream = courseList;
+        isLoadingCourses = false;
+      });
+    } catch (e) {
+      print("Error fetching courses: $e");
+      print("Stack trace: ${StackTrace.current}");
+      setState(() {
+        isLoadingCourses = false;
+    });
+  }
+}
 
   Future<void> predictCollege() async {
     setState(() {
@@ -757,9 +697,18 @@ class _CollegePredictorPageState extends State<CollegePredictorPage> {
           );
         }).toList(),
         onChanged: (String? newValue) {
-          setState(() {
-            selectedCountry = newValue;
-          });
+           if (newValue != null) {
+            print("Country selected: $newValue");
+            setState(() {
+              selectedCountry = newValue;
+              selectedStream = null;
+              selectedCourse = null;
+              streams = [];
+              coursesByStream=[];
+             
+            });
+            fetchStreams(newValue);
+           }
         },
         decoration: InputDecoration(border: InputBorder.none),
       ),
@@ -776,7 +725,15 @@ class _CollegePredictorPageState extends State<CollegePredictorPage> {
       child: DropdownButtonFormField<String>(
         dropdownColor: Colors.white,
         value: selectedStream,
-        hint: Text("Choose a stream", style: TextStyle(color: Colors.white)),
+        hint: Text(
+          isLoadingStreams
+              ? "Loading..."
+              : streams.isEmpty
+                  ? "No streams available"
+                  : "Choose a stream",
+          style: TextStyle(color: Colors.white),
+        ),
+
         items: streams.map((stream) {
           return DropdownMenuItem<String>( 
             value: stream,
@@ -786,13 +743,20 @@ class _CollegePredictorPageState extends State<CollegePredictorPage> {
             ),
           );
         }).toList(),
-        onChanged: (String? newValue) {
-          setState(() {
-            selectedStream = newValue;
-            // Reset the selected course when stream changes
-            selectedCourse = null;
-          });
-        },
+        onChanged: isLoadingStreams || streams.isEmpty
+            ? null
+            : (String? newValue) {
+                if (newValue != null) {
+                  print("Stream selected: $newValue");
+                  setState(() {
+                    selectedStream = newValue;
+                    selectedCourse = null;
+                    coursesByStream = [];
+                  });
+                  fetchCourses(selectedCountry!, newValue);
+                }
+              },
+
         decoration: InputDecoration(border: InputBorder.none),
       ),
     );
@@ -800,9 +764,9 @@ class _CollegePredictorPageState extends State<CollegePredictorPage> {
 
   Widget _buildCourseDropdown() {
     // Get courses based on selected stream
-    List<String> courses = selectedStream != null 
-        ? coursesByStream[selectedStream] ?? []
-        : [];
+    // List<String> courses = selectedStream != null 
+    //     ? coursesByStream[selectedStream] ?? []
+    //     : [];
     
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 15),
@@ -813,28 +777,58 @@ class _CollegePredictorPageState extends State<CollegePredictorPage> {
       child: DropdownButtonFormField<String>(
         dropdownColor: Colors.white,
         value: selectedCourse,
-        hint: Text(
-          selectedStream == null 
-              ? "Select a stream first" 
-              : "Choose a course", 
-          style: TextStyle(color: Colors.white)
+         hint: Text(
+          isLoadingCourses
+              ? "Loading..."
+              : selectedStream == null
+                  ? "Select a stream first"
+                  : coursesByStream.isEmpty
+                      ? "No courses available"
+                      : "Choose a course",
+          style: TextStyle(color: Colors.white),
         ),
-        items: courses.map((course) {
+
+        items: coursesByStream.map((course) {
+          String courseId = course['id']; // document ID
+          
+          // Try multiple field names to accommodate different data structures
+          // Remove quotes and colons from field names if present
+          String? courseName;
+          course.forEach((key, value) {
+            if (key.toLowerCase().contains('course') && value is String) {
+              courseName = value;
+            }
+          });
+          
+          if (courseName == null) {
+            courseName = course['Course'] ?? 
+                        course['course'] ?? 
+                        course['title'] ?? 
+                        course['name'] ?? 
+                        courseId;
+          }
+          
+          print("Creating dropdown item: $courseId → $courseName");
+
           return DropdownMenuItem<String>( 
-            value: course,
+            value: courseId,
             child: Text(
-              course,
+              courseName ?? "Unnamed Course",
               style: TextStyle(color: Colors.black),
             ),
           );
         }).toList(),
-        onChanged: selectedStream == null 
-            ? null 
+        onChanged: isLoadingCourses || selectedStream == null || coursesByStream.isEmpty
+            ? null
             : (String? newValue) {
-                setState(() {
-                  selectedCourse = newValue;
-                });
+                if (newValue != null) {
+                  print("Course selected: $newValue");
+                  setState(() {
+                    selectedCourse = newValue;
+                  });
+                }
               },
+
         decoration: InputDecoration(border: InputBorder.none),
         isExpanded: true, // Ensures long text doesn't get cut off
       ),

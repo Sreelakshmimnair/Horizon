@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
+
 class PredictionResultPage extends StatefulWidget {
   final Map<String, dynamic> predictionData;
 
@@ -48,7 +49,7 @@ class _PredictionResultPageState extends State<PredictionResultPage> {
             predictedColleges = [{"name": "Invalid API Response", "message": response.body}];
             isLoading = false;
           });
-          return;
+          return; 
         }
 
         List<Map<String, dynamic>> colleges = _extractCollegesFromResponse(jsonResponse);
@@ -76,7 +77,7 @@ class _PredictionResultPageState extends State<PredictionResultPage> {
 
   if (response is Map<String, dynamic> && response.containsKey("top_5_colleges")) {
     List<dynamic> topColleges = response["top_5_colleges"];
-    
+
     for (var college in topColleges) {
       if (college is Map<String, dynamic> && college.containsKey("college")) {
         colleges.add({
@@ -89,6 +90,7 @@ class _PredictionResultPageState extends State<PredictionResultPage> {
 
   return colleges;
 }
+
 
   bool _isLikelyCollegeObject(Map<String, dynamic> map) {
     return map.containsKey('name') || map.containsKey('collegeName') || map.containsKey('location');
