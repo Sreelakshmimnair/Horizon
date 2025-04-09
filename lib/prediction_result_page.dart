@@ -170,40 +170,54 @@ class _PredictionResultPageState extends State<PredictionResultPage> {
   Widget _buildCollegeCard(Map<String, dynamic> college) {
     String collegeName = college['name'] ?? 'Unknown College';
     String confidence = (college["confidence"] as double?)?.toStringAsFixed(2) ?? 'N/A';
-    String imageUrl = college['image'] ?? 'https://via.placeholder.com/150';
+    String imageUrl = college['image'] ?? 'assets/images/logo.png';
 
     return Card(
-      elevation: 8,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            height: 100,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.only(topLeft: Radius.circular(15), topRight: Radius.circular(15)),
-              image: DecorationImage(image: NetworkImage(imageUrl), fit: BoxFit.cover),
-            ),
+  elevation: 8,
+  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+  child: Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Container(
+        height: 100,
+        decoration: BoxDecoration(
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(15),
+            topRight: Radius.circular(15),
           ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(collegeName, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                SizedBox(height: 8),
-                Text("Probability: $confidence", style: TextStyle(color: Colors.grey.shade600)),
-                SizedBox(height: 8),
-                ElevatedButton(
-                  onPressed: () => _showCollegeDetails(college),
-                  child: Text("Explore College"),
-                ),
-              ],
-            ),
+          image: DecorationImage(
+            image: (college['image'] == null || college['image'].isEmpty)
+                ? AssetImage('assets/images/logo.png') as ImageProvider
+                : NetworkImage(college['image']),
+            fit: BoxFit.cover,
           ),
-        ],
+        ),
       ),
-    );
+      Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              collegeName,
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              "Probability: $confidence",
+              style: TextStyle(color: Colors.grey.shade600),
+            ),
+            const SizedBox(height: 8),
+            // ElevatedButton(
+            //   onPressed: () => _showCollegeDetails(college),
+            //   child: Text("Explore College"),
+            // ),
+          ],
+        ),
+      ),
+    ],
+  ),
+);
   }
 
   void _showCollegeDetails(Map<String, dynamic> college) {
